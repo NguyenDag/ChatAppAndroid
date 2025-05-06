@@ -18,9 +18,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // home: OnlineChat(name: 'Ban X', avatarUrl: 'https://th.bing.com/th/id/OIP.Ver1XHdydULpiJD6Sq1gBgHaHS?rs=1&pid=ImgDetMain'),
       home: LoginPage(),
     );
+
   }
 }
 

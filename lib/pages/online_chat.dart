@@ -127,7 +127,7 @@ class MyWidget extends State<OnlineChat> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.only(),
         child: Column(
           children: [
             Expanded(
@@ -207,12 +207,6 @@ class MyWidget extends State<OnlineChat> {
             //         _emojiController.text += emoji.emoji;
             //       },
             //       config: Config(
-            //         columns: 7,
-            //         emojiSizeMax: 32,
-            //         verticalSpacing: 0,
-            //         horizontalSpacing: 0,
-            //         initCategory: Category.SMILEYS,
-            //         bgColor: Color(0xFFF2F2F2),
             //       ),
             //     ),
             //   ),
@@ -256,7 +250,7 @@ class ContentMessage extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.all(5.0),
         child: Container(
-          margin: EdgeInsets.only(left: mq.width * 0.2, right: mq.width * 0.05),
+          margin: EdgeInsets.only(left: mq.width * 0.2, right: mq.width * 0.01),
           child: Column(
             // alignment: Alignment.centerRight,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -304,7 +298,7 @@ class ContentMessage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(5.0),
       child: Container(
-        margin: EdgeInsets.only(left: mq.width * 0.04,),
+        margin: EdgeInsets.only(left: mq.width * 0.01,),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
