@@ -65,7 +65,7 @@ class MyWidget extends State<OnlineChat> {
       // resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white,
         leading: BackButton(
           onPressed: () {
             Navigator.pushAndRemoveUntil(

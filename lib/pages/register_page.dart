@@ -23,10 +23,10 @@ class StateWidget extends State<RegisterPage>{
 
   void Register(){
     setState(() {
-      if(_passwordController.text  != _confirmPasswordController.text){
-        _errorText = 'Mật khẩu không khớp!';
-      }else if(_usernameController.text == usernameDB){
+      if(_usernameController.text == usernameDB){
         _errorText = 'Tài khoản đã tồn tại!';
+      }else if(_passwordController.text  != _confirmPasswordController.text){
+        _errorText = 'Mật khẩu không khớp!';
       }else{
         _errorText = null;
         //Xử lý đăng ký ở đây
