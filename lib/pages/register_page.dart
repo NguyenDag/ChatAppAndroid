@@ -1,6 +1,9 @@
 import 'dart:ffi';
 import 'dart:io';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter/material.dart';
 import 'package:myapp/constants/app_constants.dart';
 import 'package:myapp/constants/color_constants.dart';
@@ -14,67 +17,87 @@ class RegisterPage extends StatefulWidget {
   }
 }
 
-//khoi tao file
-Future<File> getUserFile() async {
-  final dir = await getApplicationDocumentsDirectory();
-  final file = File('${dir.path}/register.txt');
-  print('File path: ${dir.path}/register.txt');
-  if (!(await file.exists())) {
-    await file.create();
-  }
-  return file;
-}
-
 //confirm username input is exits or not
-Future<bool> isUsernameTaken(String username) async {
-  final file = await getUserFile();
-  final contents = await file.readAsLines();
-
-  for (var line in contents) {
-    final parts = line.split(',');
-    if (parts.length >= 2 && parts[1] == username) {
-      return true;
-    }
-  }
-  return false;
-}
+bool isFormatUsername(String username) =>
+    username.trim().contains(' ');
 
 //confirm pass is true or not
-Future<bool> isConfirmPassword(String password, String confirmPassword) async => password != confirmPassword;
+bool isConfirmPassword(String password, String confirmPassword) {
+  return password != confirmPassword;
+}
 
-Future<String> registerUser(String fullName, String username, String password,
-    String confirmPassword) async{
-  if(await isUsernameTaken(username)){
-    return 'Tài khoản đã tồn tại!';
-  } else if(await isConfirmPassword(password, confirmPassword)){
+Future<String> registerUser(
+  String fullName,
+  String username,
+  String password,
+  String confirmPassword,
+) async {
+  if (await fullName.trim().isEmpty ||
+      username.trim().isEmpty ||
+      password.isEmpty ||
+      confirmPassword.isEmpty) {
+    return 'Vui lòng điền đầy đủ thông tin!';
+  }
+  // else if (await isUsernameTaken(username)) {
+  //   return 'Tài khoản đã tồn tại!';
+  // }
+  else if (await isFormatUsername(username)) {
+    return 'Tài khoản không được chứa dấu cách!';
+  } else if (await isConfirmPassword(password, confirmPassword)) {
     return 'Mật khẩu không khớp!';
   }
-  final file = await getUserFile();
-  final newUserLine = "${fullName},${username},${password}\n";
-  await file.writeAsString(newUserLine, mode: FileMode.append);
+  final uri = Uri.parse('http://10.2.44.254:8888/api/auth/register');
 
-  return 'Đăng ký thành công!';
+  try {
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'FullName': fullName,
+        'UserName': username,
+        'Password': password,
+      }),
+    );
+
+    final json = jsonDecode(response.body);
+    if (json['status'] == 1) {
+      return 'Đăng ký thành công!';
+    } else {
+      return json['message'] ?? 'Đăng ký thất bại!';
+    }
+  } catch (e) {
+    return 'Lỗi kết nối tới máy chủ!';
+  }
+
 }
 
 class StateWidget extends State<RegisterPage> {
-  //giả sử tài khoản này tồn tại
-  String usernameDB = 'user1';
-
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   String? _errorText;
+  bool _isLoading = false;
 
-  void Register() async{
+  void Register() async {
+    setState(() {
+      _isLoading = true; // Bắt đầu loading
+    });
+
     final fullName = _displayNameController.text.trim();
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    final result = await registerUser(fullName, username, password, confirmPassword);
+    final result = await registerUser(
+      fullName,
+      username,
+      password,
+      confirmPassword,
+    );
     setState(() {
+      _isLoading = false; // Kết thúc loading
       if (result == 'Đăng ký thành công!') {
         _errorText = null;
         // Bạn có thể chuyển trang hoặc hiện thông báo
@@ -203,12 +226,14 @@ class StateWidget extends State<RegisterPage> {
                 child: SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
                     onPressed: Register,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorConstants.buttonColor, //màu nền
+                      backgroundColor: ColorConstants.buttonColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16), //bo góc
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     child: const Text(
