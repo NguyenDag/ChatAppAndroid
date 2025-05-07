@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
+import 'package:myapp/constants/api_constants.dart';
 import 'package:myapp/constants/app_constants.dart';
 import 'package:myapp/constants/color_constants.dart';
 import 'package:myapp/pages/login_page.dart';
@@ -46,7 +47,8 @@ Future<String> registerUser(
   } else if (isConfirmPassword(password, confirmPassword)) {
     return 'Mật khẩu không khớp!';
   }
-  final uri = Uri.parse('http://30.30.30.86:8888/api/auth/register');
+  final String endpoint = '/auth/register';
+  final uri = Uri.parse(ApiConstants.getUrl(endpoint));
 
   try {
     final response = await http.post(
