@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/constants/app_constants.dart';
 import 'package:myapp/constants/color_constants.dart';
 import 'package:myapp/pages/login_page.dart';
-import 'package:path_provider/path_provider.dart';
+// import 'package:path_provider/path_provider.dart'; //liên quan xử lý file
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -32,7 +32,7 @@ Future<String> registerUser(
   String password,
   String confirmPassword,
 ) async {
-  if (await fullName.trim().isEmpty ||
+  if (fullName.trim().isEmpty ||
       username.trim().isEmpty ||
       password.isEmpty ||
       confirmPassword.isEmpty) {
@@ -41,12 +41,12 @@ Future<String> registerUser(
   // else if (await isUsernameTaken(username)) {
   //   return 'Tài khoản đã tồn tại!';
   // }
-  else if (await isFormatUsername(username)) {
+  else if (isFormatUsername(username)) {
     return 'Tài khoản không được chứa dấu cách!';
-  } else if (await isConfirmPassword(password, confirmPassword)) {
+  } else if (isConfirmPassword(password, confirmPassword)) {
     return 'Mật khẩu không khớp!';
   }
-  final uri = Uri.parse('http://10.2.44.254:8888/api/auth/register');
+  final uri = Uri.parse('http://30.30.30.86:8888/api/auth/register');
 
   try {
     final response = await http.post(
