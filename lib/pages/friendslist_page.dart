@@ -109,7 +109,7 @@ class MyWidget extends State<FriendsList>{
               Expanded(
                   child: ListView.builder(
                     itemCount: friendsList.length,
-                    physics: BouncingScrollPhysics(),//hiệu ứng cuộn 'giật nhẹ lại'
+                    // physics: BouncingScrollPhysics(),//hiệu ứng cuộn 'giật nhẹ lại'
                     itemBuilder: (context, index) => FriendTile(name: friendsList[index], avatarUrl: avatarUrl),
                 )
               ),

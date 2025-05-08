@@ -1,29 +1,26 @@
-import 'dart:ffi';
-import 'dart:io';
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
-import 'package:myapp/constants/api_constants.dart';
 import 'package:myapp/constants/app_constants.dart';
 import 'package:myapp/constants/color_constants.dart';
+import 'package:myapp/models/user_info.dart';
 import 'package:myapp/pages/login_page.dart';
+import 'package:myapp/services/user_storage.dart';
 // import 'package:path_provider/path_provider.dart'; //liên quan xử lý file
 
 class RegisterPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    return StateWidget();
+    return _RegisterPageState();
   }
 }
 
 //confirm username input is exits or not
-bool isFormatUsername(String username) =>
-    username.trim().contains(' ');
+bool isFormatUsername(String username) => username.trim().contains(' ');
 
 //confirm pass is true or not
-bool isConfirmPassword(String password, String confirmPassword) {
+bool isPasswordMismatch(String password, String confirmPassword) {
   return password != confirmPassword;
 }
 
@@ -38,19 +35,16 @@ Future<String> registerUser(
       password.isEmpty ||
       confirmPassword.isEmpty) {
     return 'Vui lòng điền đầy đủ thông tin!';
-  }
-  // else if (await isUsernameTaken(username)) {
-  //   return 'Tài khoản đã tồn tại!';
-  // }
-  else if (isFormatUsername(username)) {
+  } else if (isFormatUsername(username)) {
     return 'Tài khoản không được chứa dấu cách!';
-  } else if (isConfirmPassword(password, confirmPassword)) {
+  } else if (isPasswordMismatch(password, confirmPassword)) {
     return 'Mật khẩu không khớp!';
   }
-  final String endpoint = '/auth/register';
-  final uri = Uri.parse(ApiConstants.getUrl(endpoint));
+  final uri = Uri.parse('http://30.30.30.87:8888/api/auth/register');
 
   try {
+    print('⏳ Gửi request đăng ký...');
+
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -60,20 +54,28 @@ Future<String> registerUser(
         'Password': password,
       }),
     );
+    print('📥 Server trả về: ${response.statusCode} - ${response.body}');
 
+    // if (response.statusCode != 200) {
+    //   return 'Lỗi kết nối tới máy chủ (${response.statusCode})!';
+    // }
     final json = jsonDecode(response.body);
-    if (json['status'] == 1) {
+    // if (json['id'] == 102) {
+    if(response.statusCode == 200){
+      final newUserInfo = UserInfo(username: username, fullName: fullName, avatar: null);
+      await UserStorage.saveUserInfo(newUserInfo);
+      UserStorage.printAllUsers();
       return 'Đăng ký thành công!';
     } else {
       return json['message'] ?? 'Đăng ký thất bại!';
     }
   } catch (e) {
+    print('❌ Lỗi ngoại lệ: $e');
     return 'Lỗi kết nối tới máy chủ!';
   }
-
 }
 
-class StateWidget extends State<RegisterPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -83,6 +85,7 @@ class StateWidget extends State<RegisterPage> {
   bool _isLoading = false;
 
   void Register() async {
+    if (_isLoading) return;
     setState(() {
       _isLoading = true; // Bắt đầu loading
     });
@@ -115,7 +118,24 @@ class StateWidget extends State<RegisterPage> {
   }
 
   @override
+  void dispose() {
+    _displayNameController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    const labelStyle = TextStyle(
+      fontSize: 16,
+      fontFamily: 'Roboto',
+      color: ColorConstants.blackColor,
+    );
+
+    const inputDecoration = InputDecoration(border: UnderlineInputBorder());
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
@@ -151,62 +171,37 @@ class StateWidget extends State<RegisterPage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 25),
-              Text(
-                'Tên hiển thị',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Roboto',
-                  color: ColorConstants.blackColor,
-                ),
-              ),
+              Text('Tên hiển thị', style: labelStyle),
               TextFormField(
                 controller: _displayNameController,
-                decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                ),
+                decoration: inputDecoration,
               ),
+
               const SizedBox(height: 25),
-              Text(
-                'Tài khoản',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Roboto',
-                  color: ColorConstants.blackColor,
-                ),
-              ),
+              Text('Tài khoản', style: labelStyle),
               TextFormField(
                 controller: _usernameController,
-                decoration: InputDecoration(border: UnderlineInputBorder()),
+                decoration: inputDecoration,
               ),
+
               const SizedBox(height: 25),
-              Text(
-                'Mật khẩu',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Roboto',
-                  color: ColorConstants.blackColor,
-                ),
-              ),
+              Text('Mật khẩu', style: labelStyle),
               TextFormField(
                 controller: _passwordController,
                 obscureText: true, //input hiển thị dưới dạng ẩn
-                decoration: InputDecoration(border: UnderlineInputBorder()),
+                decoration: inputDecoration,
               ),
+
               const SizedBox(height: 25),
-              Text(
-                'Nhập lại mật khẩu',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Roboto',
-                  color: ColorConstants.blackColor,
-                ),
-              ),
+              Text('Nhập lại mật khẩu', style: labelStyle),
               TextFormField(
                 controller: _confirmPasswordController,
-                obscureText: true, //input hiển thị dưới dạng ẩn
-                decoration: InputDecoration(border: UnderlineInputBorder()),
+                obscureText: true,
+                decoration: inputDecoration,
               ),
+
               const Spacer(),
               if (_errorText != null)
                 Center(
@@ -228,25 +223,26 @@ class StateWidget extends State<RegisterPage> {
                 child: SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                    onPressed: Register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorConstants.buttonColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      AppConstants.registerTitle,
-                      style: TextStyle(
-                        color: ColorConstants.whiteColor,
-                        fontFamily: 'Roboto',
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
+                  child:
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
+                            onPressed: _isLoading ? null : Register,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorConstants.buttonColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: const Text(
+                              AppConstants.registerTitle,
+                              style: TextStyle(
+                                color: ColorConstants.whiteColor,
+                                fontFamily: 'Roboto',
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
                 ),
               ),
               SizedBox(height: 24),
