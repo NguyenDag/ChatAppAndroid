@@ -4,7 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:myapp/constants/app_constants.dart';
 import 'package:myapp/constants/color_constants.dart';
+import 'package:myapp/models/user_info.dart';
 import 'package:myapp/pages/login_page.dart';
+import 'package:myapp/services/user_storage.dart';
 // import 'package:path_provider/path_provider.dart'; //liên quan xử lý file
 
 class RegisterPage extends StatefulWidget {
@@ -38,9 +40,11 @@ Future<String> registerUser(
   } else if (isPasswordMismatch(password, confirmPassword)) {
     return 'Mật khẩu không khớp!';
   }
-  final uri = Uri.parse('http://30.30.30.86:8888/api/auth/register');
+  final uri = Uri.parse('https://jsonplaceholder.typicode.com/posts');
 
   try {
+    print('⏳ Gửi request đăng ký...');
+
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -50,16 +54,23 @@ Future<String> registerUser(
         'Password': password,
       }),
     );
-    if (response.statusCode != 200) {
-      return 'Lỗi kết nối tới máy chủ!';
-    }
+    print('📥 Server trả về: ${response.statusCode} - ${response.body}');
+
+    // if (response.statusCode != 200) {
+    //   return 'Lỗi kết nối tới máy chủ (${response.statusCode})!';
+    // }
     final json = jsonDecode(response.body);
-    if (json['status'] == 1) {
+    // if (json['id'] == 102) {
+    if(response.statusCode == 201){
+      final newUserInfo = UserInfo(username: username, fullName: fullName, avatar: null);
+      await UserStorage.saveUserInfo(newUserInfo);
+      UserStorage.printAllUsers();
       return 'Đăng ký thành công!';
     } else {
       return json['message'] ?? 'Đăng ký thất bại!';
     }
   } catch (e) {
+    print('❌ Lỗi ngoại lệ: $e');
     return 'Lỗi kết nối tới máy chủ!';
   }
 }
@@ -74,6 +85,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isLoading = false;
 
   void Register() async {
+    if (_isLoading) return;
     setState(() {
       _isLoading = true; // Bắt đầu loading
     });
@@ -215,7 +227,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       _isLoading
                           ? const Center(child: CircularProgressIndicator())
                           : ElevatedButton(
-                            onPressed: Register,
+                            onPressed: _isLoading ? null : Register,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorConstants.buttonColor,
                               shape: RoundedRectangleBorder(

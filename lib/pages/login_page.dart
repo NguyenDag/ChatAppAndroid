@@ -5,38 +5,42 @@ import 'package:myapp/pages/friendslist_page.dart';
 
 import '../constants/app_constants.dart';
 import '../constants/color_constants.dart';
+import '../models/user_info.dart';
 import '../pages/register_page.dart';
+import '../services/user_storage.dart';
 
 class LoginPage extends StatefulWidget{
   @override
   State<StatefulWidget> createState() {
     return _LoginPageState ();
   }
-
 }
 
-class _LoginPageState extends State<LoginPage>{
-  String usernameDB = 'user1';
-  String passwordDB = '123';
+Future<String?> loginAuth(String username, String password) async {
+  const usernameDB = 'user1';
+  const passwordDB = '123';
 
+  if (username.isEmpty) {
+    return 'Tên đăng nhập không được để trống';
+  } else if (password.isEmpty) {
+    return 'Mật khẩu không được để trống';
+  } else if (username != usernameDB || password != passwordDB) {
+    return 'Bạn nhập sai tên tài khoản hoặc mật khẩu!';
+  }
+
+  return null;
+}
+class _LoginPageState extends State<LoginPage>{
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
   String? _errorText;
 
-  void _login() {
+  void _login() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
-    String? error;
-
-    if (username.isEmpty) {
-      error = 'Tên đăng nhập không được để trống';
-    } else if (password.isEmpty) {
-      error = 'Mật khẩu không được để trống';
-    } else if (username != usernameDB || password != passwordDB) {
-      error = 'Bạn nhập sai tên tài khoản hoặc mật khẩu!';
-    }
+    String? error = await loginAuth(username, password);
 
     if (error != null) {
       setState(() {
