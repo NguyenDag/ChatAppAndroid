@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/friendslist_page.dart';
+import 'package:http/http.dart' as http;
 
 import '../constants/app_constants.dart';
 import '../constants/color_constants.dart';
@@ -17,18 +19,39 @@ class LoginPage extends StatefulWidget{
 }
 
 Future<String?> loginAuth(String username, String password) async {
-  const usernameDB = 'user1';
-  const passwordDB = '123';
-
   if (username.isEmpty) {
     return 'Tên đăng nhập không được để trống';
   } else if (password.isEmpty) {
     return 'Mật khẩu không được để trống';
-  } else if (username != usernameDB || password != passwordDB) {
-    return 'Bạn nhập sai tên tài khoản hoặc mật khẩu!';
   }
+  final uri = Uri.parse('http://30.30.30.87:8888/api/auth/login');
 
-  return null;
+  try {
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'Username': username,
+        'Password': password,
+      }),
+    );
+    final json = jsonDecode(response.body);
+
+    if(json['status'] == 1){
+      final data = json['data'];
+      final fullName = data['FullName'];
+      final avatar = data['Avatar'];
+
+      final newUserInfo = UserInfo(username: username, fullName: fullName, avatar: avatar);
+      await UserStorage.saveUserInfo(newUserInfo);
+
+      return null;
+    } else {
+      return json['message'] ?? 'Đăng nhập thất bại!';
+    }
+  } catch (e) {
+    return 'Lỗi kết nối tới máy chủ!';
+  }
 }
 class _LoginPageState extends State<LoginPage>{
   final _usernameController = TextEditingController();

@@ -22,13 +22,17 @@ class UserStorage {
 
   static Future<void> saveUserInfo(UserInfo user) async {
     final users = await readUsersInfo();
-    users.add(user);
+    final exists = users.any((u) => u.username == user.username);
 
-    final path = await _getFilePath();
-    final file = File(path);
+    if (!exists) {
+      users.add(user);
 
-    final jsonString = json.encode(users.map((e) => e.toJson()).toList());
-    await file.writeAsString(jsonString);
+      final path = await _getFilePath();
+      final file = File(path);
+
+      final jsonString = json.encode(users.map((e) => e.toJson()).toList());
+      await file.writeAsString(jsonString);
+    }
   }
 
   static void printAllUsers() async {

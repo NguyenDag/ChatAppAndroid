@@ -43,34 +43,26 @@ Future<String> registerUser(
   final uri = Uri.parse('http://30.30.30.87:8888/api/auth/register');
 
   try {
-    print('⏳ Gửi request đăng ký...');
-
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'FullName': fullName,
-        'UserName': username,
+        'Username': username,
         'Password': password,
       }),
     );
-    print('📥 Server trả về: ${response.statusCode} - ${response.body}');
 
-    // if (response.statusCode != 200) {
-    //   return 'Lỗi kết nối tới máy chủ (${response.statusCode})!';
-    // }
     final json = jsonDecode(response.body);
     // if (json['id'] == 102) {
     if(response.statusCode == 200){
       final newUserInfo = UserInfo(username: username, fullName: fullName, avatar: null);
       await UserStorage.saveUserInfo(newUserInfo);
-      UserStorage.printAllUsers();
       return 'Đăng ký thành công!';
     } else {
       return json['message'] ?? 'Đăng ký thất bại!';
     }
   } catch (e) {
-    print('❌ Lỗi ngoại lệ: $e');
     return 'Lỗi kết nối tới máy chủ!';
   }
 }
