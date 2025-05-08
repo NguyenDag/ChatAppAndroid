@@ -10,12 +10,12 @@ import '../pages/register_page.dart';
 class LoginPage extends StatefulWidget{
   @override
   State<StatefulWidget> createState() {
-    return StateWidget();
+    return _LoginPageState ();
   }
 
 }
 
-class StateWidget extends State<LoginPage>{
+class _LoginPageState extends State<LoginPage>{
   String usernameDB = 'user1';
   String passwordDB = '123';
 
@@ -24,28 +24,55 @@ class StateWidget extends State<LoginPage>{
 
   String? _errorText;
 
-  void Login(){
-    setState(() {
+  void _login() {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
 
-      if(_usernameController.text.trim().isEmpty){
-        _errorText ='Tên đăng nhập không được để trống';
-      }else if(_passwordController.text.isEmpty){
-        _errorText = 'Mật khẩu không được để trống';
-      }else if(_usernameController.text != usernameDB || _passwordController.text != passwordDB) {
-        _errorText = 'Bạn nhập sai tên tài khoản hoặc mật khẩu!';
-      }else{
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => FriendsList())
-        );
+    String? error;
+
+    if (username.isEmpty) {
+      error = 'Tên đăng nhập không được để trống';
+    } else if (password.isEmpty) {
+      error = 'Mật khẩu không được để trống';
+    } else if (username != usernameDB || password != passwordDB) {
+      error = 'Bạn nhập sai tên tài khoản hoặc mật khẩu!';
+    }
+
+    if (error != null) {
+      setState(() {
+        _errorText = error;
+      });
+    } else {
+      setState(() {
         _errorText = null;
-      }
-    });
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => FriendsList()),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    const labelStyle = TextStyle(
+      fontSize: 16,
+      fontFamily: 'Roboto',
+      color: ColorConstants.blackColor,
+    );
+
+    const inputDecoration = InputDecoration(
+      border: UnderlineInputBorder(),
+    );
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
@@ -74,33 +101,21 @@ class StateWidget extends State<LoginPage>{
               const SizedBox(height: 30,),
               Text(
                 'Tài khoản',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Roboto',
-                  color: ColorConstants.blackColor
-                ),
+                style: labelStyle
               ),
               TextFormField(
                   controller: _usernameController,
-                  decoration: InputDecoration(
-                    border: UnderlineInputBorder(),
-                  )
+                  decoration: inputDecoration
                 ),
               const SizedBox(height: 30,),
               Text(
                 'Mật khẩu',
-                style: TextStyle(
-                    fontSize: 16,
-                    fontFamily: 'Roboto',
-                    color: ColorConstants.blackColor
-                ),
+                style: labelStyle,
               ),
               TextFormField(
                 controller: _passwordController,
                 obscureText: true, //input hiển thị dưới dạng ẩn
-                decoration: InputDecoration(
-                  border: UnderlineInputBorder(),
-                ),
+                decoration: inputDecoration
               ),
               const Spacer(),
               if(_errorText != null)
@@ -124,7 +139,7 @@ class StateWidget extends State<LoginPage>{
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: Login,
+                    onPressed: _login,
                     style: ElevatedButton.styleFrom(
                         backgroundColor: ColorConstants.buttonColor,//màu nền
                         shape: RoundedRectangleBorder(

@@ -133,7 +133,7 @@ class MyWidget extends State<OnlineChat> {
             Expanded(
               child: ListView.builder(
                 itemCount: messages.length,
-                physics: BouncingScrollPhysics(),
+                // physics: BouncingScrollPhysics(),
                 itemBuilder:
                     (context, index) => ContentMessage(
                       msg: messages[index],
