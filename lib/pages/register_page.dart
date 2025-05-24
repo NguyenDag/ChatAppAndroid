@@ -42,8 +42,8 @@ Future<String> registerUser(
   } else if (isPasswordMismatch(password, confirmPassword)) {
     return 'Mật khẩu không khớp!';
   }
-  String urlPath = ApiConstants.getUrl('/auth/register');
-  final uri = Uri.parse(urlPath);
+  String endPoint = '/auth/register';
+  final uri = Uri.parse(ApiConstants.getUrl(endPoint));
 
   try {
     final response = await http.post(

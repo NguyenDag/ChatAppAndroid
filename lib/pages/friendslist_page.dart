@@ -1,28 +1,39 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:myapp/constants/api_constants.dart';
 import 'package:myapp/pages/online_chat.dart';
 
 import '../constants/api_constants.dart';
 import '../constants/color_constants.dart';
+import '../services/friend_service.dart';
 
 late Size mq;
 class FriendsList extends StatefulWidget{
   @override
   State<StatefulWidget> createState() {
-    return MyWidget();
+    return MyHome();
   }
 }
 
-class MyWidget extends State<FriendsList>{
+class MyHome extends State<FriendsList>{
   final TextEditingController _searchController = TextEditingController();
-  final List<String> friendsList = ['Bạn A', 'Bạn B', 'Bạn C', 'Bạn D', 'Bạn E', 'Bạn F',
-    'Bạn A1', 'Bạn B1', 'Bạn C1', 'Bạn D1', 'Bạn E1', 'Bạn F1',
-    'Bạn A2', 'Bạn B2', 'Bạn C2', 'Bạn D2', 'Bạn E2', 'Bạn F2',
-    'Bạn A3', 'Bạn B3', 'Bạn C3', 'Bạn D3', 'Bạn E3', 'Bạn F3'];
+  List<Map<String, dynamic>> friendsList = [];
   final String avatarUrl =
       'https://th.bing.com/th/id/OIP.dIF3iIIIuK5HeBCq_aoxZwHaH8?rs=1&pid=ImgDetMain';
   void _clearSearch(){
     _searchController.clear();
+  }
+  void loadFriends() async {
+    final friends = await FriendService.fetchFriends();
+    setState(() {
+      friendsList = friends;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadFriends();
   }
   @override
   Widget build(BuildContext context) {
@@ -111,7 +122,13 @@ class MyWidget extends State<FriendsList>{
                   child: ListView.builder(
                     itemCount: friendsList.length,
                     // physics: BouncingScrollPhysics(),//hiệu ứng cuộn 'giật nhẹ lại'
-                    itemBuilder: (context, index) => FriendTile(name: friendsList[index], avatarUrl: avatarUrl),
+                    itemBuilder: (context, index) {
+                      final friend = friendsList[index];
+                      final name = friend['FullName'] ?? 'No Name';
+                      final avatar = (friend['Avatar'] != null) ? ApiConstants.getUrl(friend['Avatar']) : 'https://th.bing.com/th/id/OIP.SM1bBvT7L-CEJttOlifmVAHaHZ?rs=1&pid=ImgDetMain';
+
+                      return FriendTile(name: name, avatarUrl: avatar);
+                    }
                 )
               ),
             ],

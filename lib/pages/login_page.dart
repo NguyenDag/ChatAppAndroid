@@ -1,11 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/friendslist_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:myapp/services/token_service.dart';
 
-import '../constants/app_constants.dart';
 import '../constants/api_constants.dart';
+import '../constants/app_constants.dart';
 import '../constants/color_constants.dart';
 import '../models/user_info.dart';
 import '../pages/register_page.dart';
@@ -24,9 +26,8 @@ Future<String?> loginAuth(String username, String password) async {
   } else if (password.isEmpty) {
     return 'Mật khẩu không được để trống';
   }
-
-  String urlPath = ApiConstants.getUrl('/auth/login');
-  final uri = Uri.parse(urlPath);
+  String endPoint = '/auth/login';
+  final uri = Uri.parse(ApiConstants.getUrl(endPoint));
 
   try {
     final response = await http.post(
@@ -43,6 +44,9 @@ Future<String?> loginAuth(String username, String password) async {
       final data = json['data'];
       final fullName = data['FullName'];
       final avatar = data['Avatar'];
+      final token = data['token'];
+
+      TokenService.saveToken(token);
 
       final newUserInfo = UserInfo(username: username, fullName: fullName, avatar: avatar);
       await UserStorage.saveUserInfo(newUserInfo);
