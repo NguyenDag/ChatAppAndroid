@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/friendslist_page.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/app_constants.dart';
+import '../constants/api_constants.dart';
 import '../constants/color_constants.dart';
 import '../models/user_info.dart';
 import '../pages/register_page.dart';
@@ -24,7 +24,9 @@ Future<String?> loginAuth(String username, String password) async {
   } else if (password.isEmpty) {
     return 'Mật khẩu không được để trống';
   }
-  final uri = Uri.parse('http://30.30.30.87:8888/api/auth/login');
+
+  String urlPath = ApiConstants.getUrl('/auth/login');
+  final uri = Uri.parse(urlPath);
 
   try {
     final response = await http.post(

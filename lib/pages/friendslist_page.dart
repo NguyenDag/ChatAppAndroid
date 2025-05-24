@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/online_chat.dart';
 
+import '../constants/api_constants.dart';
 import '../constants/color_constants.dart';
 
 late Size mq;
@@ -164,4 +165,10 @@ class FriendTile extends StatelessWidget{
       ),
     );
   }
+}
+Future<bool> getUserInfo() async{
+  String urlPath = ApiConstants.getUrl('/auth/login');
+  final uri = Uri.parse(urlPath);
+
+  return true;
 }

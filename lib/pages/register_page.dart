@@ -7,6 +7,8 @@ import 'package:myapp/constants/color_constants.dart';
 import 'package:myapp/models/user_info.dart';
 import 'package:myapp/pages/login_page.dart';
 import 'package:myapp/services/user_storage.dart';
+
+import '../constants/api_constants.dart';
 // import 'package:path_provider/path_provider.dart'; //liên quan xử lý file
 
 class RegisterPage extends StatefulWidget {
@@ -40,7 +42,8 @@ Future<String> registerUser(
   } else if (isPasswordMismatch(password, confirmPassword)) {
     return 'Mật khẩu không khớp!';
   }
-  final uri = Uri.parse('http://30.30.30.87:8888/api/auth/register');
+  String urlPath = ApiConstants.getUrl('/auth/register');
+  final uri = Uri.parse(urlPath);
 
   try {
     final response = await http.post(

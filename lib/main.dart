@@ -18,8 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      home: OnlineChat(name: 'Evelyn Dang', avatarUrl: 'https://firebasestorage.googleapis.com/v0/b/nguyen-dang.appspot.com/o/em.jpg?alt=media&token=218bdcd8-e29b-46d8-a516-4cc4ad8c1776',),
     );
-
   }
 }
