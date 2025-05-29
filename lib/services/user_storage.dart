@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:myapp/services/token_service.dart';
 import 'package:path_provider/path_provider.dart';
+import '../constants/api_constants.dart';
 import '../models/user_info.dart';
 
 class UserStorage {
@@ -40,5 +43,37 @@ class UserStorage {
     for (var user in users) {
       print('👤 ${user.username} - ${user.fullName} - ${user.avatar}');
     }
+  }
+
+  static Future<Map<String, dynamic>?> fetchUserInfo() async{
+    final token = await TokenService.getToken();
+    if (token == null) {
+      print('You need to login!');
+      return null;
+    }
+    final endPoint = '/user/info';
+    final url = Uri.parse(ApiConstants.getUrl(endPoint));
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if(response.statusCode == 200){
+      final body = jsonDecode(response.body);
+      final status = body['status'];
+      if(status != null && status == 1){
+        // List<dynamic> rawList = body['data'];
+        return body['data'];
+      }else{
+        print('Lỗi API: ${body['message']}');
+      }
+    }else{
+      print('Lỗi server: ${response.statusCode}');
+    }
+    return null;
   }
 }

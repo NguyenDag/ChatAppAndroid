@@ -37,4 +37,12 @@ class FriendService {
     }
     return [];
   }
+
+  static List<Map<String, dynamic>> filterFriends(
+      List<Map<String, dynamic>> originalList, String query) {
+    return originalList.where((friend) {
+      final name = friend['FullName']?.toLowerCase() ?? '';
+      return name.contains(query.toLowerCase());
+    }).toList();
+  }
 }

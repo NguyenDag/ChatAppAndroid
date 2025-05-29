@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/friendslist_page.dart';
 import 'package:myapp/pages/login_page.dart';
-import 'package:myapp/pages/online_chat.dart';
-import 'package:myapp/pages/register_page.dart';
+import 'package:myapp/services/login_service.dart';
+import 'package:myapp/services/network_service.dart';
 
-void main() {
-  runApp(const
-    MyApp()
-  );
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // đảm bảo mọi thứ được khởi tạo
+  final isLoggedIn = await LoginService.isLoggedInWithinAWeek();
+  final hasInternet = await NetworkService.hasInternet();
+  runApp(MyApp(isLoggedIn: isLoggedIn, hasInternet: hasInternet,));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatelessWidget {    
+  final bool isLoggedIn;
+  final bool hasInternet;
+
+  const MyApp({super.key, required this.isLoggedIn, required this.hasInternet});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: OnlineChat(name: 'Evelyn Dang', avatarUrl: 'https://firebasestorage.googleapis.com/v0/b/nguyen-dang.appspot.com/o/em.jpg?alt=media&token=218bdcd8-e29b-46d8-a516-4cc4ad8c1776',),
+      home: !isLoggedIn ? LoginPage() : FriendsList(),
+
     );
   }
 }
