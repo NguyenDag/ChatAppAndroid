@@ -29,6 +29,8 @@ class Message {
 
 class MyWidget extends State<OnlineChat> {
   bool _showEmoji = false;
+  final FocusNode _focusNode = FocusNode();
+
   final TextEditingController _emojiController = TextEditingController();
 
   List<Message> messages = [
@@ -50,30 +52,48 @@ class MyWidget extends State<OnlineChat> {
     Message(
       text: 'Lát nữa ghé mua cho tôi ít đồ nhé.',
       isSender: false,
-      createAt: DateTime.now().subtract(Duration(minutes: 4)),
+      createAt: DateTime.now().subtract(Duration(minutes: 10)),
     ),
     Message(
       text: 'Oke bạn',
       isSender: true,
-      createAt: DateTime.now().subtract(Duration(minutes: 5)),
+      createAt: DateTime.now().subtract(Duration(minutes: 10)),
     ),
     Message(
       text: 'moi ngay den truong la 1 ngay vui toi di hoc, co nhieu dieu hay',
       isSender: false,
-      createAt: DateTime.now().subtract(Duration(minutes: 6)),
+      createAt: DateTime.now().subtract(Duration(minutes: 9)),
     ),
     Message(
       text: 'Yêu tổ quốc, yêu đồng bào. Học tập tốt, lao động tốt.',
       isSender: true,
-      createAt: DateTime.now().subtract(Duration(minutes: 7)),
+      createAt: DateTime.now().subtract(Duration(minutes: 8)),
     ),
     Message(
       text: 'Hihi',
       isSender: false,
-      createAt: DateTime.now().subtract(Duration(minutes: 8)),
+      createAt: DateTime.now().subtract(Duration(minutes: 7)),
     ),
     // Thêm các tin nhắn tiếp theo tương tự
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus && _showEmoji) {
+        setState(() {
+          _showEmoji = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,19 +182,30 @@ class MyWidget extends State<OnlineChat> {
                   bool showDateHeader = currentDate != prevDate;
 
                   return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       if (showDateHeader)
                         Center(
                           child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
+                              ),
+                              color: Colors.grey,
+                            ),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 3,
+                                vertical: 0,
+                              ),
                               child: Text(
                                 currentDate,
-                                style: TextStyle(color: Colors.black),
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 10,
+                                ),
                               ),
                             ),
-                            color: Colors.grey,
                           ),
                         ),
                       ContentMessage(
@@ -220,6 +251,7 @@ class MyWidget extends State<OnlineChat> {
                       ),
                       child: TextField(
                         controller: _emojiController,
+                        focusNode: _focusNode,
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: 15,
