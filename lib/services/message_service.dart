@@ -74,7 +74,7 @@ class MessageService {
         var stream = http.ByteStream(image.openRead());
         var length = await image.length();
         var multipartFile = http.MultipartFile(
-          'Images',
+          'images',
           stream,
           length,
           filename: path.basename(image.path),
@@ -89,7 +89,7 @@ class MessageService {
         var stream = http.ByteStream(file.openRead());
         var length = await file.length();
         var multipartFile = http.MultipartFile(
-          'Files',
+          'files',
           stream,
           length,
           filename: path.basename(file.path),
@@ -118,5 +118,49 @@ class MessageService {
     }
 
     return null;
+  }
+
+  static bool isImageUrl(String? url) {
+    if (url == null) return false;
+    final lower = url.toLowerCase();
+    return lower.endsWith('.png') ||
+        lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.bmp') ||
+        lower.endsWith('.webp');
+  }
+
+  static bool isFileUrl(String? url) {
+    if (url == null) return false;
+    final lower = url.toLowerCase();
+
+    // Các định dạng file cho phép (không phải ảnh)
+    final allowedExtensions = [
+      '.pdf',
+      '.doc',
+      '.docx',
+      '.xls',
+      '.xlsx',
+      '.ppt',
+      '.pptx',
+      '.txt',
+      '.zip',
+      '.rar',
+      '.7z',
+      '.mp3',
+      '.mp4',
+      '.mov',
+      '.avi',
+    ];
+
+    return allowedExtensions.any((ext) => lower.endsWith(ext));
+  }
+
+  static String getContentType(String? url, String? content) {
+    if (isImageUrl(url)) return 'image';
+    if (isFileUrl(url)) return 'file';
+    if (content != null && content.isNotEmpty) return 'text';
+    return 'unknown';
   }
 }
