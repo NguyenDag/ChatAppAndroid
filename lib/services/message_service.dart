@@ -98,6 +98,20 @@ class MessageService {
       }
     }
 
+    // final allFiles = [...?imageFiles, ...?otherFiles];
+    //
+    // for (var file in allFiles) {
+    //   var stream = http.ByteStream(file.openRead());
+    //   var length = await file.length();
+    //   var multipartFile = http.MultipartFile(
+    //     'files',
+    //     stream,
+    //     length,
+    //     filename: path.basename(file.path),
+    //   );
+    //   request.files.add(multipartFile);
+    // }
+
     try {
       final response = await request.send();
 
@@ -123,19 +137,22 @@ class MessageService {
   static bool isImageUrl(String? url) {
     if (url == null) return false;
     final lower = url.toLowerCase();
-    return lower.endsWith('.png') ||
-        lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.gif') ||
-        lower.endsWith('.bmp') ||
-        lower.endsWith('.webp');
+
+    final allowedExtensions = [
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.gif',
+      '.bmp',
+      '.webp',
+    ];
+    return allowedExtensions.any((ext) => lower.endsWith(ext));
   }
 
   static bool isFileUrl(String? url) {
     if (url == null) return false;
     final lower = url.toLowerCase();
 
-    // Các định dạng file cho phép (không phải ảnh)
     final allowedExtensions = [
       '.pdf',
       '.doc',

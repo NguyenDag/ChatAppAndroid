@@ -12,6 +12,7 @@ import 'package:myapp/services/message_service.dart';
 
 import '../constants/api_constants.dart';
 import '../models/file_model.dart';
+import '../services/file_service.dart';
 import '../services/message_database.dart';
 
 late Size mq;
@@ -39,7 +40,9 @@ class OnlineChat extends StatefulWidget {
 class MyWidget extends State<OnlineChat> {
   final ScrollController _scrollController = ScrollController();
 
-  File? _pickedImage;
+  // File? _pickedImage;
+
+  List<File> _pickedImages = [];
   List<File> _pickedFiles = [];
 
   final ImagePicker _imagePicker = ImagePicker();
@@ -220,6 +223,54 @@ class MyWidget extends State<OnlineChat> {
               ),
             ),
             Divider(height: 1), //kẻ đường chỉ ngang
+
+            if (_pickedImages.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: SizedBox(
+                  height: 80,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _pickedImages.length,
+                    itemBuilder: (context, index) {
+                      return Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.symmetric(horizontal: 4),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                _pickedImages[index],
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _pickedImages.removeAt(index);
+                              });
+                            },
+                            child: CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.black54,
+                              child: Icon(
+                                Icons.close,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
@@ -265,34 +316,37 @@ class MyWidget extends State<OnlineChat> {
                           suffixIcon: IconButton(
                             icon: Icon(Icons.send),
                             color: Colors.blue,
-                              onPressed: () async {
-                                final hasText = _emojiController.text.trim().isNotEmpty;
-                                final hasImage = _pickedImage != null;
-                                final hasFiles = _pickedFiles.isNotEmpty;
+                            onPressed: () async {
+                              final hasText =
+                                  _emojiController.text.trim().isNotEmpty;
+                              final hasImage = _pickedImages.isNotEmpty;
+                              final hasFiles = _pickedFiles.isNotEmpty;
 
-                                if (!hasText && !hasImage && !hasFiles) return;
+                              if (!hasText && !hasImage && !hasFiles) return;
 
-                                final newMsg = await MessageService.sendMessage(
-                                  friendId: widget.friendId,
-                                  content: _emojiController.text.trim(),
-                                  imageFiles: hasImage ? [_pickedImage!] : null,
-                                  otherFiles: hasFiles ? _pickedFiles : null,
-                                );
+                              final newMsg = await MessageService.sendMessage(
+                                friendId: widget.friendId,
+                                content: _emojiController.text.trim(),
+                                imageFiles: hasImage ? _pickedImages : null,
+                                otherFiles: hasFiles ? _pickedFiles : null,
+                              );
 
-                                if (newMsg != null) {
-                                  await MessageDatabase.insertMessage(newMsg);
-                                  setState(() {
-                                    messages.add(newMsg);
-                                    _emojiController.clear();
-                                    _pickedImage = null;     // reset sau khi gửi
-                                    _pickedFiles.clear();    // reset sau khi gửi
-                                  });
+                              if (newMsg != null) {
+                                await MessageDatabase.insertMessage(newMsg);
+                                setState(() {
+                                  messages.add(newMsg);
+                                  _emojiController.clear();
+                                  _pickedImages.clear(); // reset sau khi gửi
+                                  _pickedFiles.clear(); // reset sau khi gửi
+                                });
 
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    _scrollToBottom();
-                                  });
-                                }
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  _scrollToBottom();
+                                });
                               }
+                            },
                           ),
                           suffixIconColor: Colors.blue,
                         ),
@@ -321,12 +375,12 @@ class MyWidget extends State<OnlineChat> {
                   SizedBox(width: 8),
                   GestureDetector(
                     onTap: () async {
-                      final XFile? image = await _imagePicker.pickImage(
-                        source: ImageSource.gallery,
-                      );
-                      if (image != null) {
+                      final List<XFile> images =
+                          await _imagePicker.pickMultiImage();
+                      if (images != null && images.isNotEmpty) {
                         setState(() {
-                          _pickedImage = File(image.path);
+                          _pickedImages =
+                              images.map((x) => File(x.path)).toList();
                         });
                       }
                     },
@@ -675,57 +729,71 @@ class _FileMessages extends StatelessWidget {
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context).size;
 
-    Widget fileList = Container(
-      padding: EdgeInsets.all(10),
+    return Container(
+      padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: Color(0xFFF2F7FB),
-        borderRadius:
-            messageType == 1
-                ? BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                )
-                : BorderRadius.only(
-                  topRight: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
+        color: const Color(0xFFF2F7FB),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
-      constraints: BoxConstraints(maxWidth: mq.width * 0.65),
+      constraints: BoxConstraints(maxWidth: mq.width * 0.75),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children:
             files.map((file) {
-              return Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.insert_drive_file, color: Colors.blue),
-                      SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          file.fileName ?? 'File',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.insert_drive_file, color: Colors.blue),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        file.fileName ?? 'File',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: () {
+                        _downloadFile(context, file.urlFile, file.fileName);
+                      },
+                      child: const Icon(
+                        Icons.download,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
+                    ),
+                  ],
                 ),
               );
             }).toList(),
       ),
     );
+  }
 
-    return fileList;
+  void _downloadFile(
+    BuildContext context,
+    String? url,
+    String? fileName,
+  ) async {
+    if (url == null || fileName == null) return;
+
+    FileService.downloadFile(url, fileName);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Đang tải $fileName...')));
   }
 }
 
@@ -783,4 +851,3 @@ class _TextMessage extends StatelessWidget {
     return textMessage;
   }
 }
-
