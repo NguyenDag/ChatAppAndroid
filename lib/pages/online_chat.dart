@@ -582,8 +582,8 @@ class ContentMessage extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
+                  ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: 60),
                     child: receiverMessageBody,
                   ),
                   if (_showTime)
@@ -636,7 +636,7 @@ class _ImageMessages extends StatelessWidget {
           fit: BoxFit.cover,
           errorBuilder:
               (context, error, stackTrace) => Container(
-                color: Colors.grey[300],
+                color: Colors.white,
                 width: mq.width * 0.65,
                 height: mq.height * 0.65 * 3 / 4,
                 child: Icon(Icons.broken_image),
@@ -732,17 +732,20 @@ class _FileMessages extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F7FB),
+        color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
-      constraints: BoxConstraints(maxWidth: mq.width * 0.75),
+      constraints: BoxConstraints(maxWidth: mq.width * 0.65),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children:
             files.map((file) {
               return Container(
                 margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
@@ -790,7 +793,7 @@ class _FileMessages extends StatelessWidget {
   ) async {
     if (url == null || fileName == null) return;
 
-    FileService.downloadFile(url, fileName);
+    FileService.downloadToDownloadFolder(url, fileName);
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('Đang tải $fileName...')));
@@ -838,12 +841,15 @@ class _TextMessage extends StatelessWidget {
                   bottomLeft: Radius.circular(12),
                 ),
       ),
-      child: Text(
-        content,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: messageType == 1 ? Colors.white : Colors.black,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: mq.width * 0.6),
+        child: Text(
+          content,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: messageType == 1 ? Colors.white : Colors.black,
+          ),
         ),
       ),
     );

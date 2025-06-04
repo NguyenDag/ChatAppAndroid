@@ -1,34 +1,78 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:external_path/external_path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class FileService{
-  static Future<void> downloadFile(String fileUrl, String fileName) async {
+class FileService {
+  // static Future<void> downloadFile(String fileUrl, String fileName) async {
+  //   final appStorage = await getApplicationDocumentsDirectory();
+  //   final file = File('${appStorage.path}/$fileName');
+  //
+  //   final response = await Dio().get(
+  //     fileUrl,
+  //     options: Options(
+  //       responseType: ResponseType.bytes,
+  //       followRedirects: false,
+  //       receiveTimeout: Duration.zero,
+  //     ),
+  //   );
+  //   final raf = file.openSync(mode: FileMode.write);
+  //   raf.writeFromSync(response.data);
+  //   await raf.close();
+  //
+  // }
+
+  static Future<void> downloadToDownloadFolder(
+    String fileUrl,
+    String fileName,
+  ) async {
+    // Xin quyền truy cập bộ nhớ
+    if (!await _requestPermission()) {
+      print("Permission denied");
+      return;
+    }
+
+    // Lấy thư mục Downloads (Android only)
+    Directory? downloadDir;
+    if (Platform.isAndroid) {
+      downloadDir = Directory('/storage/emulated/0/Download');
+    } else if (Platform.isIOS) {
+      downloadDir = await getApplicationDocumentsDirectory();
+    }
+
+    if (downloadDir == null) {
+      print('Download folder not found');
+      return;
+    }
+
+    final String baseUrl = "http://30.30.30.85:8888/api";
+    final String fullUrl = "$baseUrl$fileUrl";
+    final file = File('${downloadDir.path}/$fileName');
+
     try {
-      if (Platform.isAndroid) {
-        var status = await Permission.storage.request();
-        if (!status.isGranted) {
-          print('Permission denied');
-          return;
-        }
-      }
+      final response = await Dio().get(
+        fullUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+          followRedirects: false,
+          receiveTimeout: Duration.zero,
+        ),
+      );
 
-      // Lấy thư mục lưu
-      Directory dir = Platform.isAndroid
-          ? Directory('/storage/emulated/0/Download') // Android
-          : await getApplicationDocumentsDirectory(); // iOS
-
-      String savePath = '${dir.path}/$fileName';
-
-      // Tải bằng Dio
-      Dio dio = Dio();
-      await dio.download(fileUrl, savePath);
-
-      print('Downloaded to: $savePath');
+      await file.writeAsBytes(response.data);
+      print('File saved to: ${file.path}');
     } catch (e) {
       print('Download error: $e');
     }
+  }
+
+  static Future<bool> _requestPermission() async {
+    if (Platform.isAndroid) {
+      final status = await Permission.manageExternalStorage.request();
+      return status.isGranted;
+    }
+    return true;
   }
 }

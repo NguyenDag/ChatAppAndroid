@@ -68,6 +68,8 @@ class MessageService {
       request.fields['Content'] = content;
     }
 
+
+    //=========xử lý lưu vào đúng đường dẫn ảnh và file
     // Gửi ảnh
     if (imageFiles != null) {
       for (var image in imageFiles) {
@@ -98,8 +100,10 @@ class MessageService {
       }
     }
 
+    //
     // final allFiles = [...?imageFiles, ...?otherFiles];
     //
+    // //xử lý gộp chung vào "files"
     // for (var file in allFiles) {
     //   var stream = http.ByteStream(file.openRead());
     //   var length = await file.length();
