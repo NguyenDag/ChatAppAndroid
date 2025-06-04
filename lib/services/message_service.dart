@@ -68,7 +68,7 @@ class MessageService {
       request.fields['Content'] = content;
     }
 
-
+    /*
     //=========xử lý lưu vào đúng đường dẫn ảnh và file
     // Gửi ảnh
     if (imageFiles != null) {
@@ -99,22 +99,22 @@ class MessageService {
         request.files.add(multipartFile);
       }
     }
+    */
 
-    //
-    // final allFiles = [...?imageFiles, ...?otherFiles];
-    //
-    // //xử lý gộp chung vào "files"
-    // for (var file in allFiles) {
-    //   var stream = http.ByteStream(file.openRead());
-    //   var length = await file.length();
-    //   var multipartFile = http.MultipartFile(
-    //     'files',
-    //     stream,
-    //     length,
-    //     filename: path.basename(file.path),
-    //   );
-    //   request.files.add(multipartFile);
-    // }
+    final allFiles = [...?imageFiles, ...?otherFiles];
+
+    //xử lý gộp chung vào "files"
+    for (var file in allFiles) {
+      var stream = http.ByteStream(file.openRead());
+      var length = await file.length();
+      var multipartFile = http.MultipartFile(
+        'files',
+        stream,
+        length,
+        filename: path.basename(file.path),
+      );
+      request.files.add(multipartFile);
+    }
 
     try {
       final response = await request.send();

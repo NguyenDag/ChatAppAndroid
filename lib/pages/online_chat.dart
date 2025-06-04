@@ -466,18 +466,27 @@ class ContentMessage extends StatelessWidget {
 
     if (msg.images != null && msg.images!.isNotEmpty) {
       senderMessageBody = _ImageMessages(
-        images: msg.images!,
+        images: msg.files!,
         createdAt: msg.createdAt,
         showTime: _showTime,
         messageType: msg.messageType,
       );
     } else if (msg.files != null && msg.files!.isNotEmpty) {
-      senderMessageBody = _FileMessages(
-        files: msg.files!,
-        createdAt: msg.createdAt,
-        showTime: _showTime,
-        messageType: msg.messageType,
-      );
+      if (MessageService.isImageUrl(msg.files[0].urlFile)) {
+        senderMessageBody = _ImageMessages(
+          images: msg.files!,
+          createdAt: msg.createdAt,
+          showTime: _showTime,
+          messageType: msg.messageType,
+        );
+      } else {
+        senderMessageBody = _FileMessages(
+          files: msg.files!,
+          createdAt: msg.createdAt,
+          showTime: _showTime,
+          messageType: msg.messageType,
+        );
+      }
     } else {
       senderMessageBody = _TextMessage(
         content: msg.content ?? '',
@@ -519,18 +528,27 @@ class ContentMessage extends StatelessWidget {
 
     if (msg.images != null && msg.images!.isNotEmpty) {
       receiverMessageBody = _ImageMessages(
-        images: msg.images!,
+        images: msg.files!,
         createdAt: msg.createdAt,
         showTime: _showTime,
         messageType: msg.messageType,
       );
     } else if (msg.files != null && msg.files!.isNotEmpty) {
-      receiverMessageBody = _FileMessages(
-        files: msg.files!,
-        createdAt: msg.createdAt,
-        showTime: _showTime,
-        messageType: msg.messageType,
-      );
+      if (MessageService.isImageUrl(msg.files[0].urlFile)) {
+        receiverMessageBody = _ImageMessages(
+          images: msg.files!,
+          createdAt: msg.createdAt,
+          showTime: _showTime,
+          messageType: msg.messageType,
+        );
+      } else {
+        receiverMessageBody = _FileMessages(
+          files: msg.files!,
+          createdAt: msg.createdAt,
+          showTime: _showTime,
+          messageType: msg.messageType,
+        );
+      }
     } else {
       receiverMessageBody = _TextMessage(
         content: msg.content ?? '',
@@ -609,7 +627,7 @@ class ContentMessage extends StatelessWidget {
 }
 
 class _ImageMessages extends StatelessWidget {
-  final List<ImageModel> images;
+  final List<FileModel> images;
   final DateTime createdAt;
   final bool showTime;
   final int messageType;
@@ -627,21 +645,11 @@ class _ImageMessages extends StatelessWidget {
 
     Widget imageWidget;
     if (images.length == 1) {
-      imageWidget = ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          ApiConstants.getUrl(images[0].urlImage),
-          width: mq.width * 0.65,
-          height: mq.height * 0.65 * 3 / 4,
-          fit: BoxFit.cover,
-          errorBuilder:
-              (context, error, stackTrace) => Container(
-                color: Colors.white,
-                width: mq.width * 0.65,
-                height: mq.height * 0.65 * 3 / 4,
-                child: Icon(Icons.broken_image),
-              ),
-        ),
+      imageWidget = _buildImage(
+        context,
+        images[0],
+        mq.width * 0.65,
+        mq.height * 0.65 * 3 / 4,
       );
     } else if (images.length == 2) {
       double itemWidth = (mq.width * 0.65 - 6) / 2;
@@ -660,19 +668,7 @@ class _ImageMessages extends StatelessWidget {
                   padding: EdgeInsets.only(left: 6),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      ApiConstants.getUrl(image.urlImage),
-                      width: itemWidth,
-                      height: itemHeight,
-                      fit: BoxFit.cover,
-                      errorBuilder:
-                          (context, error, stackTrace) => Container(
-                            color: Colors.grey[300],
-                            width: itemWidth,
-                            height: itemHeight,
-                            child: Icon(Icons.broken_image),
-                          ),
-                    ),
+                    child: _buildImage(context, image, itemWidth, itemHeight),
                   ),
                 );
               }).toList(),
@@ -688,18 +684,11 @@ class _ImageMessages extends StatelessWidget {
               images.map((image) {
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    ApiConstants.getUrl(image.urlImage),
-                    width: (mq.width * 0.65 - 12) / 3,
-                    height: mq.height * 0.15,
-                    fit: BoxFit.cover,
-                    errorBuilder:
-                        (context, error, stackTrace) => Container(
-                          color: Colors.grey[300],
-                          width: (mq.width * 0.65 - 12) / 3,
-                          height: mq.height * 0.15,
-                          child: Icon(Icons.broken_image),
-                        ),
+                  child: _buildImage(
+                    context,
+                    image,
+                    (mq.width * 0.65 - 12) / 3,
+                    mq.height * 0.15,
                   ),
                 );
               }).toList(),
@@ -707,8 +696,68 @@ class _ImageMessages extends StatelessWidget {
       );
     }
     ;
-
     return imageWidget;
+  }
+
+  Widget _buildImage(
+    BuildContext context,
+    FileModel image,
+    double width,
+    double height,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        //oppen full screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => FullScreenImageViewer(
+                  imageUrl: ApiConstants.getUrl(image.urlFile),
+                ),
+          ),
+        );
+      },
+      onLongPress: () {
+        //display download dialog
+        showDialog(
+          context: context,
+          builder:
+              (ctx) => AlertDialog(
+                title: Text('Tải ảnh'),
+                content: Text('Bạn muốn tải ảnh này không?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                    },
+                    child: Text('Tải xuống'),
+                  ),
+                ],
+              ),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          ApiConstants.getUrl(image.urlFile),
+          width: width,
+          height: height,
+          fit: BoxFit.cover,
+          errorBuilder:
+              (context, error, stackTrace) => Container(
+                color: Colors.grey[300],
+                width: width,
+                height: height,
+                child: Icon(Icons.broken_image),
+              ),
+        ),
+      ),
+    );
   }
 }
 
@@ -855,5 +904,22 @@ class _TextMessage extends StatelessWidget {
     );
 
     return textMessage;
+  }
+}
+
+class FullScreenImageViewer extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImageViewer({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Center(child: InteractiveViewer(child: Image.network(imageUrl))),
+      ),
+    );
   }
 }
