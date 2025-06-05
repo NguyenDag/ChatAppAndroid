@@ -75,4 +75,16 @@ class FileService {
     }
     return true;
   }
+
+  static Future<bool> requestStoragePermission() async {
+    var status = await Permission.photos.status;
+    if (!status.isGranted) {
+      status = await Permission.photos.request();
+    }
+
+    if (!status.isGranted) {
+      return false;
+    }
+    return true;
+  }
 }

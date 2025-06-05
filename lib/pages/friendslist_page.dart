@@ -115,9 +115,13 @@ class MyHome extends State<FriendsList> {
               },
               child: CircleAvatar(
                 child: CircleAvatar(
-                  backgroundImage: (currentUser != null && currentUser!['Avatar'] != null)
-                      ? NetworkImage(ApiConstants.getUrl(currentUser!['Avatar']))
-                      : const AssetImage('assets/images/no_avatar.jpg') as ImageProvider,
+                  backgroundImage:
+                      (currentUser != null && currentUser!['Avatar'] != null)
+                          ? NetworkImage(
+                            ApiConstants.getUrl(currentUser!['Avatar']),
+                          )
+                          : const AssetImage('assets/images/no_avatar.jpg')
+                              as ImageProvider,
                 ),
               ),
             ),
@@ -178,6 +182,19 @@ class MyHome extends State<FriendsList> {
                   // physics: BouncingScrollPhysics(),//hiệu ứng cuộn 'giật nhẹ lại'
                   itemBuilder: (context, index) {
                     final friend = friendsList[index];
+                    String? content = friend['Content'];
+                    final files = friend['Files'];
+                    final images = friend['Images'];
+
+                    if (files != null) {
+                      content = 'Đã gửi file cho bạn!';
+                    } else if (images != null) {
+                      content = 'Đã gửi ảnh cho bạn!';
+                    } else if (content == '' &&
+                        files == null &&
+                        images == null) {
+                      content = 'Hãy bắt đầu cuộc trò chuyện';
+                    }
                     final name = friend['FullName'] ?? 'No Name';
                     final avatar =
                         (friend['Avatar'] != null)
@@ -185,11 +202,14 @@ class MyHome extends State<FriendsList> {
                             : 'https://static2.yan.vn/YanNews/2167221/202102/facebook-cap-nhat-avatar-doi-voi-tai-khoan-khong-su-dung-anh-dai-dien-e4abd14d.jpg';
                     final isOnline = friend['isOnline'];
                     final friendId = friend['FriendID'];
+                    final isSend = friend['isSend'];
                     return FriendTile(
                       name: name,
                       avatarUrl: avatar,
                       isOnline: isOnline,
                       friendID: friendId,
+                      content: content,
+                      isSend: isSend,
                     );
                   },
                 ),
@@ -207,6 +227,8 @@ class FriendTile extends StatelessWidget {
   final String avatarUrl;
   final bool isOnline;
   final String friendID;
+  final String? content;
+  final int isSend;
 
   const FriendTile({
     super.key,
@@ -214,6 +236,8 @@ class FriendTile extends StatelessWidget {
     required this.avatarUrl,
     required this.isOnline,
     required this.friendID,
+    required this.content,
+    required this.isSend,
   });
 
   @override
@@ -257,13 +281,16 @@ class FriendTile extends StatelessWidget {
         padding: const EdgeInsets.only(left: 10.0),
         child: Text(name),
       ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(left: 10.0),
+        child: Text(
+          content!,
+          style:
+              isSend == 0
+                  ? TextStyle(fontSize: 12, fontWeight: FontWeight.bold)
+                  : TextStyle(fontSize: 12),
+        ),
+      ),
     );
   }
-}
-
-Future<bool> getUserInfo() async {
-  String urlPath = ApiConstants.getUrl('/auth/login');
-  final uri = Uri.parse(urlPath);
-
-  return true;
 }

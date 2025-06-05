@@ -54,7 +54,7 @@ dependencies:
   external_path: ^2.2.0
 
   #Download Image
-  image_gallery_saver: ^2.0.3
+  saver_gallery: ^4.0.1
 
 dev_dependencies:
   flutter_test:

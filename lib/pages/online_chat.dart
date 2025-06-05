@@ -1,14 +1,17 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:myapp/models/image_model.dart';
 import 'package:myapp/models/message.dart';
 import 'package:myapp/pages/friendslist_page.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/services/message_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:saver_gallery/saver_gallery.dart';
 
 import '../constants/api_constants.dart';
 import '../models/file_model.dart';
@@ -51,6 +54,7 @@ class MyWidget extends State<OnlineChat> {
   List<Message> messages = [];
 
   void loadMessage() async {
+    if (!mounted) return;
     List<Message> msg = await MessageService.fetchMessages(widget.friendId);
 
     for (var m in msg) {
@@ -466,13 +470,13 @@ class ContentMessage extends StatelessWidget {
 
     if (msg.images != null && msg.images!.isNotEmpty) {
       senderMessageBody = _ImageMessages(
-        images: msg.files!,
+        images: msg.images!,
         createdAt: msg.createdAt,
         showTime: _showTime,
         messageType: msg.messageType,
       );
     } else if (msg.files != null && msg.files!.isNotEmpty) {
-      if (MessageService.isImageUrl(msg.files[0].urlFile)) {
+      if (MessageService.isImageUrl(msg.files[0].url)) {
         senderMessageBody = _ImageMessages(
           images: msg.files!,
           createdAt: msg.createdAt,
@@ -528,13 +532,13 @@ class ContentMessage extends StatelessWidget {
 
     if (msg.images != null && msg.images!.isNotEmpty) {
       receiverMessageBody = _ImageMessages(
-        images: msg.files!,
+        images: msg.images!,
         createdAt: msg.createdAt,
         showTime: _showTime,
         messageType: msg.messageType,
       );
     } else if (msg.files != null && msg.files!.isNotEmpty) {
-      if (MessageService.isImageUrl(msg.files[0].urlFile)) {
+      if (MessageService.isImageUrl(msg.files[0].url)) {
         receiverMessageBody = _ImageMessages(
           images: msg.files!,
           createdAt: msg.createdAt,
@@ -713,7 +717,7 @@ class _ImageMessages extends StatelessWidget {
           MaterialPageRoute(
             builder:
                 (_) => FullScreenImageViewer(
-                  imageUrl: ApiConstants.getUrl(image.urlFile),
+                  imageUrl: ApiConstants.getUrl(image.url),
                 ),
           ),
         );
@@ -724,7 +728,7 @@ class _ImageMessages extends StatelessWidget {
           context: context,
           builder:
               (ctx) => AlertDialog(
-                title: Text('Tải ảnh'),
+                title: Text('Download'),
                 content: Text('Bạn muốn tải ảnh này không?'),
                 actions: [
                   TextButton(
@@ -732,8 +736,9 @@ class _ImageMessages extends StatelessWidget {
                     child: Text('Hủy'),
                   ),
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(ctx);
+                      _downloadImage(context, image.url, image.fileName);
                     },
                     child: Text('Tải xuống'),
                   ),
@@ -744,7 +749,7 @@ class _ImageMessages extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Image.network(
-          ApiConstants.getUrl(image.urlFile),
+          ApiConstants.getUrl(image.url),
           width: width,
           height: height,
           fit: BoxFit.cover,
@@ -758,6 +763,45 @@ class _ImageMessages extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _downloadImage(BuildContext context, String imageUrl, String imageName) async {
+    bool hasPermission = await FileService.requestStoragePermission();
+    if (!hasPermission) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Cần quyền để lưu ảnh.")));
+      return;
+    }
+
+    try {
+      final response = await Dio().get(
+        ApiConstants.getUrl(imageUrl),
+        options: Options(responseType: ResponseType.bytes),
+      );
+      Uint8List bytes = Uint8List.fromList(response.data);
+
+      // Lưu ảnh
+      final result = await SaverGallery.saveImage(
+        bytes,
+        fileName: imageName,
+        skipIfExists: false,
+        quality: 100,
+      );
+      if (result.isSuccess) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Tải thành công")));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Tải ảnh thất bại!")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Lỗi khi tải ảnh: $e")));
+    }
   }
 }
 
@@ -819,7 +863,7 @@ class _FileMessages extends StatelessWidget {
                     const SizedBox(width: 6),
                     GestureDetector(
                       onTap: () {
-                        _downloadFile(context, file.urlFile, file.fileName);
+                        _downloadFile(context, file.url, file.fileName);
                       },
                       child: const Icon(
                         Icons.download,

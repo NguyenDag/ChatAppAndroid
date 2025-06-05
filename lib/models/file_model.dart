@@ -1,25 +1,25 @@
 class FileModel {
-  final String urlFile;
+  final String url;
   final String fileName;
   final String id;
 
   FileModel({
-    required this.urlFile,
+    required this.url,
     required this.fileName,
     required this.id,
   });
 
   factory FileModel.fromJson(Map<String, dynamic> json) {
     return FileModel(
-      urlFile: json['urlFile'],
-      fileName: json['FileName'],
-      id: json['_id'],
+      url: json['urlImage'] as String? ?? json['urlFile'] as String? ?? '',
+      fileName: json['FileName'] as String? ?? '',
+      id: json['_id'] as String? ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'urlFile': urlFile,
+      'urlFile': url,
       'FileName': fileName,
       '_id': id,
     };

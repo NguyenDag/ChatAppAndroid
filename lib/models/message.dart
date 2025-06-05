@@ -1,13 +1,12 @@
 import 'dart:convert';
 
 import 'file_model.dart';
-import 'image_model.dart';
 
 class Message {
   final String id;
   final String? content;
   final List<FileModel> files;
-  final List<ImageModel> images;
+  final List<FileModel> images;
   final int isSend;
   final DateTime createdAt;
   final int messageType;
@@ -33,7 +32,7 @@ class Message {
           [],
       images:
           (json['Images'] as List<dynamic>?)
-              ?.map((e) => ImageModel.fromJson(e))
+              ?.map((e) => FileModel.fromJson(e))
               .toList() ??
           [],
       isSend: json['isSend'],
@@ -67,7 +66,7 @@ class Message {
       images:
           (map['images'] as String).isNotEmpty
               ? (jsonDecode(map['images']) as List)
-                  .map((e) => ImageModel.fromJson(e))
+                  .map((e) => FileModel.fromJson(e))
                   .toList()
               : [],
       isSend: map['isSend'],
