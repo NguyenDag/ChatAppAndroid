@@ -60,6 +60,7 @@ class MessageService {
     final url = Uri.parse(ApiConstants.getUrl(endPoint));
     var request = http.MultipartRequest('POST', url);
 
+    request.headers['ContentType'] = 'application/json';
     request.headers['Authorization'] = 'Bearer $token';
 
     request.fields['FriendID'] = friendId;

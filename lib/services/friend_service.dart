@@ -23,23 +23,25 @@ class FriendService {
       },
     );
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
       final status = body['status'];
-      if(status != null && status == 1){
+      if (status != null && status == 1) {
         List<dynamic> rawList = body['data'];
         return rawList.cast<Map<String, dynamic>>();
-      }else{
+      } else {
         print('Lỗi API: ${body['message']}');
       }
-    }else{
+    } else {
       print('Lỗi server: ${response.statusCode}');
     }
     return [];
   }
 
   static List<Map<String, dynamic>> filterFriends(
-      List<Map<String, dynamic>> originalList, String query) {
+    List<Map<String, dynamic>> originalList,
+    String query,
+  ) {
     return originalList.where((friend) {
       final name = friend['FullName']?.toLowerCase() ?? '';
       return name.contains(query.toLowerCase());

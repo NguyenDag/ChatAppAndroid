@@ -1,43 +1,44 @@
-class Friend {
-  final String friendId;
-  final String fullName;
-  final String username;
-  final String? avatar;
-  final String content;
-  final bool isOnline;
-  final int isSend;
+import 'package:realm/realm.dart';
 
-  Friend({
-    required this.friendId,
-    required this.fullName,
-    required this.username,
-    this.avatar,
-    required this.content,
-    required this.isOnline,
-    required this.isSend,
-  });
+part 'friend.realm.dart';
 
-  factory Friend.fromJson(Map<String, dynamic> json) {
-    return Friend(
-      friendId: json['FriendID'],
-      fullName: json['FullName'],
-      username: json['Username'],
-      avatar: json['Avatar'],
-      content: json['Content'],
-      isOnline: json['isOnline'] ?? false,
-      isSend: json['isSend'] ?? 0,
-    );
-  }
+@RealmModel()
+class _Friend {
+  @PrimaryKey()
+  late String friendId;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'FriendID': friendId,
-      'FullName': fullName,
-      'Username': username,
-      'Avatar': avatar,
-      'Content': content,
-      'isOnline': isOnline,
-      'isSend': isSend,
-    };
-  }
+  late String fullName;
+  late String username;
+  late String? content;
+  late List<String> files;
+  late List<String> images;
+  late bool isOnline;
+  late int isSend;
 }
+
+extension FriendJson on Friend {
+  Map<String, dynamic> friendToJson() => {
+    'FriendID': friendId,
+    'FullName': fullName,
+    'Username': username,
+    'Content': content,
+    'Files': files.map((e) => e.toString()).toList(),
+    'Images': images.map((e) => e.toString()).toList(),
+    'isOnline': isOnline,
+    'isSend': isSend,
+  };
+}
+
+Friend friendFromJson(Map<String, dynamic> json) {
+  return Friend(
+    json['FriendID'] as String,
+    json['FullName'] as String,
+    json['Username'] as String,
+    json['isOnline'] as bool? ?? false,
+    json['isSend'] as int? ?? 0,
+    content: json['Content'] as String?,
+    files: List<String>.from((json['Files'] ?? []).map((e) => e.toString())),
+    images: List<String>.from((json['Images'] ?? []).map((e) => e.toString())),
+  );
+}
+

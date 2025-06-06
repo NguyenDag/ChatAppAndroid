@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/constants/api_constants.dart';
+import 'package:myapp/models/friend.dart';
 import 'package:myapp/pages/login_page.dart';
 import 'package:myapp/pages/online_chat.dart';
+import 'package:myapp/services/realm_friend_service.dart';
 import 'package:myapp/services/token_service.dart';
 import 'package:myapp/services/user_storage.dart';
 
-import '../constants/api_constants.dart';
 import '../constants/color_constants.dart';
 import '../services/friend_service.dart';
 
@@ -37,12 +38,28 @@ class MyHome extends State<FriendsList> {
     }
   }
 
-  void loadFriends() async {
-    final friends = await FriendService.fetchFriends();
+  Future<void> loadFriends() async {
+    final offlineFriends = RealmFriendService.getAllLocalFriends();
     setState(() {
-      friendsList = friends;
-      originalFriendsList = friends;
+      friendsList = offlineFriends.map((f) => f.friendToJson()).toList();
+      originalFriendsList = friendsList;
     });
+
+    try {
+      // Gọi API nếu có mạng
+      final apiFriends = await FriendService.fetchFriends();
+
+      // Lưu vào Realm
+      RealmFriendService.saveFriendsToLocal(apiFriends);
+
+      // Cập nhật hiển thị
+      setState(() {
+        friendsList = apiFriends;
+        originalFriendsList = apiFriends;
+      });
+    } catch (e) {
+      print('Không thể gọi API, dùng dữ liệu Realm offline. $e');
+    }
   }
 
   void _onSearchChanged() {
@@ -84,6 +101,7 @@ class MyHome extends State<FriendsList> {
           false, //đảm bảo phần body không vẽ ra sau appbar để tránh xung đột màu
       // backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         // elevation: 0,
         title: Text(
@@ -143,7 +161,6 @@ class MyHome extends State<FriendsList> {
                   color: Color(0xFFF3F6F6),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                // padding:const EdgeInsets.symmetric(horizontal: 35),
                 child: TextField(
                   controller: _searchController,
                   style: TextStyle(fontSize: 12),
@@ -177,41 +194,46 @@ class MyHome extends State<FriendsList> {
               ),
               SizedBox(height: mq.height * .025),
               Expanded(
-                child: ListView.builder(
-                  itemCount: friendsList.length,
-                  // physics: BouncingScrollPhysics(),//hiệu ứng cuộn 'giật nhẹ lại'
-                  itemBuilder: (context, index) {
-                    final friend = friendsList[index];
-                    String? content = friend['Content'];
-                    final files = friend['Files'];
-                    final images = friend['Images'];
-
-                    if (files != null) {
-                      content = 'Đã gửi file cho bạn!';
-                    } else if (images != null) {
-                      content = 'Đã gửi ảnh cho bạn!';
-                    } else if (content == '' &&
-                        files == null &&
-                        images == null) {
-                      content = 'Hãy bắt đầu cuộc trò chuyện';
-                    }
-                    final name = friend['FullName'] ?? 'No Name';
-                    final avatar =
-                        (friend['Avatar'] != null)
-                            ? ApiConstants.getUrl(friend['Avatar'])
-                            : 'https://static2.yan.vn/YanNews/2167221/202102/facebook-cap-nhat-avatar-doi-voi-tai-khoan-khong-su-dung-anh-dai-dien-e4abd14d.jpg';
-                    final isOnline = friend['isOnline'];
-                    final friendId = friend['FriendID'];
-                    final isSend = friend['isSend'];
-                    return FriendTile(
-                      name: name,
-                      avatarUrl: avatar,
-                      isOnline: isOnline,
-                      friendID: friendId,
-                      content: content,
-                      isSend: isSend,
-                    );
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    await loadFriends();
                   },
+                  child: ListView.builder(
+                    itemCount: friendsList.length,
+                    // physics: BouncingScrollPhysics(),//hiệu ứng cuộn 'giật nhẹ lại'
+                    itemBuilder: (context, index) {
+                      final friend = friendsList[index];
+                      String? content = friend['Content'];
+                      final files = friend['Files'];
+                      final images = friend['Images'];
+
+                      if (files is List && files.isNotEmpty) {
+                        content = 'Đã gửi file cho bạn!';
+                      } else if (images is List && images.isNotEmpty) {
+                        content = 'Đã gửi ảnh cho bạn!';
+                      } else if (content == '' &&
+                          files == null &&
+                          images == null) {
+                        content = 'Hãy bắt đầu cuộc trò chuyện';
+                      }
+                      final name = friend['FullName'] ?? 'No Name';
+                      final avatar =
+                          (friend['Avatar'] != null)
+                              ? ApiConstants.getUrl(friend['Avatar'])
+                              : 'https://static2.yan.vn/YanNews/2167221/202102/facebook-cap-nhat-avatar-doi-voi-tai-khoan-khong-su-dung-anh-dai-dien-e4abd14d.jpg';
+                      final isOnline = friend['isOnline'];
+                      final friendId = friend['FriendID'];
+                      final isSend = friend['isSend'];
+                      return FriendTile(
+                        name: name,
+                        avatarUrl: avatar,
+                        isOnline: isOnline,
+                        friendID: friendId,
+                        content: content,
+                        isSend: isSend,
+                      );
+                    },
+                  ),
                 ),
               ),
             ],

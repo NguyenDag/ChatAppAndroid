@@ -27,12 +27,12 @@ class Message {
       content: json['Content'],
       files:
           (json['Files'] as List<dynamic>?)
-              ?.map((e) => FileModel.fromJson(e))
+              ?.map((e) => fromJson(e))
               .toList() ??
           [],
       images:
           (json['Images'] as List<dynamic>?)
-              ?.map((e) => FileModel.fromJson(e))
+              ?.map((e) => fromJson(e))
               .toList() ??
           [],
       isSend: json['isSend'],
@@ -53,40 +53,23 @@ class Message {
     };
   }
 
-  factory Message.fromMap(Map<String, dynamic> map) {
-    return Message(
-      id: map['id'],
-      content: map['content'],
-      files:
-          (map['files'] as String).isNotEmpty
-              ? (jsonDecode(map['files']) as List)
-                  .map((e) => FileModel.fromJson(e))
-                  .toList()
-              : [],
-      images:
-          (map['images'] as String).isNotEmpty
-              ? (jsonDecode(map['images']) as List)
-                  .map((e) => FileModel.fromJson(e))
-                  .toList()
-              : [],
-      isSend: map['isSend'],
-      createdAt: DateTime.parse(map['createdAt']),
-      messageType: map['messageType'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'content': content,
-      'files': jsonEncode(files),
-      'images': jsonEncode(images),
-      'isSend': isSend,
-      'createdAt': createdAt.toIso8601String(),
-      'messageType': messageType,
-    };
-  }
-
   static DateTime formatDate(DateTime date) =>
       DateTime(date.year, date.month, date.day);
 }
+
+// import 'package:realm/realm.dart';
+//
+// import 'file_model.dart';
+//
+// @RealmModel()
+// class _Message {
+//   @PrimaryKey()
+//   late String id;
+//
+//   late String? content;
+//   late List<_FileModel> files;
+//   late List<_FileModel> images;
+//   late int isSend;
+//   late DateTime createdAt;
+//   late int messageType;
+// }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/friendslist_page.dart';
@@ -13,10 +12,10 @@ import '../models/user_info.dart';
 import '../pages/register_page.dart';
 import '../services/user_storage.dart';
 
-class LoginPage extends StatefulWidget{
+class LoginPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    return _LoginPageState ();
+    return _LoginPageState();
   }
 }
 
@@ -33,22 +32,23 @@ Future<String?> loginAuth(String username, String password) async {
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'Username': username,
-        'Password': password,
-      }),
+      body: jsonEncode({'Username': username, 'Password': password}),
     );
     final json = jsonDecode(response.body);
 
-    if(json['status'] == 1){
+    if (json['status'] == 1) {
       final data = json['data'];
       final fullName = data['FullName'];
       final avatar = data['Avatar'];
       final token = data['token'];
 
-      TokenService.saveToken(token);
+      TokenService.saveToken(token, username);
 
-      final newUserInfo = UserInfo(username: username, fullName: fullName, avatar: avatar);
+      final newUserInfo = UserInfo(
+        username: username,
+        fullName: fullName,
+        avatar: avatar,
+      );
       await UserStorage.saveUserInfo(newUserInfo);
 
       return null;
@@ -59,7 +59,8 @@ Future<String?> loginAuth(String username, String password) async {
     return 'Lỗi kết nối tới máy chủ!';
   }
 }
-class _LoginPageState extends State<LoginPage>{
+
+class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -88,6 +89,19 @@ class _LoginPageState extends State<LoginPage>{
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedUsername();
+  }
+
+  void _loadSavedUsername() async {
+    final savedUsername = await TokenService.getUsername();
+    if (savedUsername != null && savedUsername.isNotEmpty) {
+      _usernameController.text = savedUsername;
+    }
+  }
+
+  @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
@@ -102,14 +116,13 @@ class _LoginPageState extends State<LoginPage>{
       color: ColorConstants.blackColor,
     );
 
-    const inputDecoration = InputDecoration(
-      border: UnderlineInputBorder(),
-    );
+    const inputDecoration = InputDecoration(border: UnderlineInputBorder());
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           'Bkav Chat',
           style: TextStyle(
@@ -121,7 +134,7 @@ class _LoginPageState extends State<LoginPage>{
         ),
         backgroundColor: ColorConstants.whiteColor,
         // backgroundColor: Colors.red,
-        foregroundColor:  ColorConstants.blackColor,
+        foregroundColor: ColorConstants.blackColor,
       ),
       body: SafeArea(
         child: Padding(
@@ -131,27 +144,21 @@ class _LoginPageState extends State<LoginPage>{
             children: [
               const Spacer(),
 
-              const SizedBox(height: 30,),
-              Text(
-                'Tài khoản',
-                style: labelStyle
-              ),
+              const SizedBox(height: 30),
+              Text('Tài khoản', style: labelStyle),
               TextFormField(
-                  controller: _usernameController,
-                  decoration: inputDecoration
-                ),
-              const SizedBox(height: 30,),
-              Text(
-                'Mật khẩu',
-                style: labelStyle,
+                controller: _usernameController,
+                decoration: inputDecoration,
               ),
+              const SizedBox(height: 30),
+              Text('Mật khẩu', style: labelStyle),
               TextFormField(
                 controller: _passwordController,
                 obscureText: true, //input hiển thị dưới dạng ẩn
-                decoration: inputDecoration
+                decoration: inputDecoration,
               ),
               const Spacer(),
-              if(_errorText != null)
+              if (_errorText != null)
                 Center(
                   child: Padding(
                     padding: EdgeInsets.only(),
@@ -174,10 +181,10 @@ class _LoginPageState extends State<LoginPage>{
                   child: ElevatedButton(
                     onPressed: _login,
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorConstants.buttonColor,//màu nền
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),//bo góc
-                        )
+                      backgroundColor: ColorConstants.buttonColor, //màu nền
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16), //bo góc
+                      ),
                     ),
                     child: const Text(
                       AppConstants.loginButton,
@@ -185,7 +192,8 @@ class _LoginPageState extends State<LoginPage>{
                         color: ColorConstants.whiteColor,
                         fontFamily: 'Roboto',
                         fontSize: 16,
-                      ),),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -197,9 +205,8 @@ class _LoginPageState extends State<LoginPage>{
                     onTap: () {
                       //TODO
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => RegisterPage())
+                        context,
+                        MaterialPageRoute(builder: (context) => RegisterPage()),
                       );
                     },
                     child: Text(
@@ -213,7 +220,7 @@ class _LoginPageState extends State<LoginPage>{
                   ),
                 ),
               ),
-              SizedBox(height: 24,)
+              SizedBox(height: 24),
             ],
           ),
         ),

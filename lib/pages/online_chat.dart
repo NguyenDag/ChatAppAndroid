@@ -10,13 +10,11 @@ import 'package:myapp/pages/friendslist_page.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/services/message_service.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 
 import '../constants/api_constants.dart';
 import '../models/file_model.dart';
 import '../services/file_service.dart';
-import '../services/message_database.dart';
 
 late Size mq;
 
@@ -57,9 +55,6 @@ class MyWidget extends State<OnlineChat> {
     if (!mounted) return;
     List<Message> msg = await MessageService.fetchMessages(widget.friendId);
 
-    for (var m in msg) {
-      await MessageDatabase.insertMessage(m); // <- Lưu từng tin nhắn vào SQLite
-    }
     setState(() {
       messages = msg;
     });
@@ -68,12 +63,12 @@ class MyWidget extends State<OnlineChat> {
     });
   }
 
-  void loadOfflineMessages() async {
-    List<Message> cached = await MessageDatabase.getMessages(widget.friendId);
-    setState(() {
-      messages = cached;
-    });
-  }
+  // void loadOfflineMessages() async {
+  //   List<Message> cached = await MessageDatabase.getMessages(widget.friendId);
+  //   setState(() {
+  //     messages = cached;
+  //   });
+  // }
 
   void _scrollToBottom() {
     _scrollController.animateTo(
@@ -86,7 +81,7 @@ class MyWidget extends State<OnlineChat> {
   @override
   void initState() {
     super.initState();
-    loadOfflineMessages();
+    // loadOfflineMessages();
     loadMessage();
   }
 
@@ -336,7 +331,6 @@ class MyWidget extends State<OnlineChat> {
                               );
 
                               if (newMsg != null) {
-                                await MessageDatabase.insertMessage(newMsg);
                                 setState(() {
                                   messages.add(newMsg);
                                   _emojiController.clear();
@@ -381,7 +375,7 @@ class MyWidget extends State<OnlineChat> {
                     onTap: () async {
                       final List<XFile> images =
                           await _imagePicker.pickMultiImage();
-                      if (images != null && images.isNotEmpty) {
+                      if (images.isNotEmpty) {
                         setState(() {
                           _pickedImages =
                               images.map((x) => File(x.path)).toList();
@@ -468,24 +462,24 @@ class ContentMessage extends StatelessWidget {
   Widget _buildSenderMessage() {
     final Widget senderMessageBody;
 
-    if (msg.images != null && msg.images!.isNotEmpty) {
+    if (msg.images.isNotEmpty) {
       senderMessageBody = _ImageMessages(
-        images: msg.images!,
+        images: msg.images,
         createdAt: msg.createdAt,
         showTime: _showTime,
         messageType: msg.messageType,
       );
-    } else if (msg.files != null && msg.files!.isNotEmpty) {
+    } else if (msg.files.isNotEmpty) {
       if (MessageService.isImageUrl(msg.files[0].url)) {
         senderMessageBody = _ImageMessages(
-          images: msg.files!,
+          images: msg.files,
           createdAt: msg.createdAt,
           showTime: _showTime,
           messageType: msg.messageType,
         );
       } else {
         senderMessageBody = _FileMessages(
-          files: msg.files!,
+          files: msg.files,
           createdAt: msg.createdAt,
           showTime: _showTime,
           messageType: msg.messageType,
@@ -530,24 +524,24 @@ class ContentMessage extends StatelessWidget {
   Widget _buildReceiverMessage(String name, String avatarUrl, bool isOnline) {
     final Widget receiverMessageBody;
 
-    if (msg.images != null && msg.images!.isNotEmpty) {
+    if (msg.images.isNotEmpty) {
       receiverMessageBody = _ImageMessages(
-        images: msg.images!,
+        images: msg.images,
         createdAt: msg.createdAt,
         showTime: _showTime,
         messageType: msg.messageType,
       );
-    } else if (msg.files != null && msg.files!.isNotEmpty) {
+    } else if (msg.files.isNotEmpty) {
       if (MessageService.isImageUrl(msg.files[0].url)) {
         receiverMessageBody = _ImageMessages(
-          images: msg.files!,
+          images: msg.files,
           createdAt: msg.createdAt,
           showTime: _showTime,
           messageType: msg.messageType,
         );
       } else {
         receiverMessageBody = _FileMessages(
-          files: msg.files!,
+          files: msg.files,
           createdAt: msg.createdAt,
           showTime: _showTime,
           messageType: msg.messageType,
@@ -659,7 +653,7 @@ class _ImageMessages extends StatelessWidget {
       double itemWidth = (mq.width * 0.65 - 6) / 2;
       double itemHeight = itemWidth * 3 / 4;
 
-      imageWidget = Container(
+      imageWidget = SizedBox(
         width: mq.width * 0.67,
         child: Row(
           mainAxisAlignment:
@@ -669,7 +663,10 @@ class _ImageMessages extends StatelessWidget {
           children:
               images.map((image) {
                 return Padding(
-                  padding: EdgeInsets.only(left: 6),
+                  padding:
+                      messageType == 1
+                          ? const EdgeInsets.only(left: 6.0)
+                          : const EdgeInsets.only(right: 6.0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: _buildImage(context, image, itemWidth, itemHeight),
@@ -679,11 +676,11 @@ class _ImageMessages extends StatelessWidget {
         ),
       );
     } else {
-      imageWidget = Container(
+      imageWidget = SizedBox(
         width: mq.width * 0.65,
         child: Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: 6, //khoảng cách ngang giữa các hình ảnh.
+          runSpacing: 6, //khoảng cách dọc giữa các dòng ảnh.
           children:
               images.map((image) {
                 return ClipRRect(
@@ -765,7 +762,11 @@ class _ImageMessages extends StatelessWidget {
     );
   }
 
-  void _downloadImage(BuildContext context, String imageUrl, String imageName) async {
+  void _downloadImage(
+    BuildContext context,
+    String imageUrl,
+    String imageName,
+  ) async {
     bool hasPermission = await FileService.requestStoragePermission();
     if (!hasPermission) {
       ScaffoldMessenger.of(
@@ -851,7 +852,7 @@ class _FileMessages extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        file.fileName ?? 'File',
+                        file.fileName,
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -954,7 +955,7 @@ class _TextMessage extends StatelessWidget {
 class FullScreenImageViewer extends StatelessWidget {
   final String imageUrl;
 
-  const FullScreenImageViewer({required this.imageUrl});
+  const FullScreenImageViewer({super.key, required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
