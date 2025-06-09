@@ -33,7 +33,7 @@ class MessageService {
       if (status != null && status == 1) {
         final List<dynamic> rawList = body['data'];
         return rawList
-            .map((item) => Message.fromJson(item as Map<String, dynamic>))
+            .map((item) => messageFromJson(item as Map<String, dynamic>, friendId))
             .toList();
       } else {
         print('Lỗi API: ${body['message']}');
@@ -125,7 +125,7 @@ class MessageService {
         final jsonResp = jsonDecode(respStr);
 
         if (jsonResp['status'] == 1) {
-          return Message.fromJson(jsonResp['data']);
+          return messageFromJson(jsonResp['data'], friendId);
         } else {
           print('Send failed: ${jsonResp['message']}');
         }

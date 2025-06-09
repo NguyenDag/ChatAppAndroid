@@ -13,8 +13,8 @@ import 'package:myapp/services/message_service.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 
 import '../constants/api_constants.dart';
-import '../models/file_model.dart';
 import '../services/file_service.dart';
+import '../services/realm_message_service.dart';
 
 late Size mq;
 
@@ -53,11 +53,29 @@ class MyWidget extends State<OnlineChat> {
 
   void loadMessage() async {
     if (!mounted) return;
-    List<Message> msg = await MessageService.fetchMessages(widget.friendId);
 
+    final offlineMessages = RealmMessageService.getMessagesForFriend(
+      widget.friendId,
+    );
     setState(() {
-      messages = msg;
+      messages = offlineMessages;
     });
+
+    try {
+      final apiMessages = await MessageService.fetchMessages(widget.friendId);
+
+      RealmMessageService.saveMessagesToLocal(widget.friendId,
+        apiMessages.map((m) => m.messageToJson()).toList(),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        messages = apiMessages;
+      });
+    } catch (e) {
+      print('Không thể gọi API, dùng dữ liệu Realm offline. $e');
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToBottom();
     });
@@ -413,8 +431,9 @@ class MyWidget extends State<OnlineChat> {
 
   String formatDateGroup(DateTime date) {
     final now = DateTime.now();
-    final diff =
-        Message.formatDate(now).difference(Message.formatDate(date)).inDays;
+    DateTime timeNow = MessageJson.formatDate(now);
+
+    final diff = timeNow.difference(MessageJson.formatDate(date)).inDays;
 
     if (diff == 0) return 'Hôm nay';
     if (diff == 1) return 'Hôm qua';
@@ -448,8 +467,8 @@ class ContentMessage extends StatelessWidget {
   bool get _showTime =>
       index == messages.length - 1 ||
       !(messages[index + 1].messageType == msg.messageType) ||
-      !(Message.formatDate(messages[index + 1].createdAt) ==
-          Message.formatDate(msg.createdAt));
+      !(MessageJson.formatDate(messages[index + 1].createdAt) ==
+          MessageJson.formatDate(msg.createdAt));
 
   @override
   Widget build(BuildContext context) {
