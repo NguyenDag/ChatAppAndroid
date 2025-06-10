@@ -76,7 +76,7 @@ Message messageFromJson(Map<String, dynamic> json, String friendId) {
 
   return Message(
     json['id'] as String? ?? '',
-    friendId,
+    friendId as String? ?? '',
     json['isSend'] as int? ?? 0,
     DateTime.tryParse(json['CreatedAt'] ?? '') ?? DateTime.now(),
     json['MessageType'] as int? ?? 0,

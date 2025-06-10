@@ -49,42 +49,146 @@ class MyWidget extends State<OnlineChat> {
   final ImagePicker _imagePicker = ImagePicker();
   bool _showEmoji = false;
   final TextEditingController _emojiController = TextEditingController();
+  bool isLoading = false;
   List<Message> messages = [];
 
-  void loadMessage() async {
+  Future<void> loadMessage() async {
     if (!mounted) return;
 
-    final offlineMessages = RealmMessageService.getMessagesForFriend(
-      widget.friendId,
-    );
+    // Hiển thị loading indicator
     setState(() {
-      messages = offlineMessages;
+      isLoading = true;
     });
 
     try {
-      final apiMessages = await MessageService.fetchMessages(widget.friendId);
-
-      RealmMessageService.saveMessagesToLocal(widget.friendId,
-        apiMessages.map((m) => m.messageToJson()).toList(),
+      final offlineMessages = RealmMessageService.getMessagesForFriend(
+        widget.friendId,
       );
 
       if (!mounted) return;
-      setState(() {
-        messages = apiMessages;
-      });
-    } catch (e) {
-      print('Không thể gọi API, dùng dữ liệu Realm offline. $e');
-    }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
+      if (offlineMessages.isNotEmpty) {
+        setState(() {
+          messages = offlineMessages;
+          isLoading = false;
+        });
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom();
+        });
+      }
+
+      try {
+        final apiMessages = await MessageService.fetchMessages(widget.friendId);
+
+        if (!mounted) return;
+
+        await RealmMessageService.saveMessagesToLocal(
+          widget.friendId,
+          apiMessages.map((m) => m.messageToJson()).toList(),
+        );
+
+        setState(() {
+          messages = apiMessages;
+          isLoading = false;
+        });
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom();
+        });
+      } catch (apiError) {
+        print('Không thể gọi API, sử dụng dữ liệu offline. Error: $apiError');
+
+        if (!mounted) return;
+
+        if (messages.isEmpty && offlineMessages.isEmpty) {
+          setState(() {
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+        }
+
+        _showOfflineMessage();
+      }
+    } catch (realmError) {
+      print('Lỗi khi load tin nhắn từ Realm: $realmError');
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        messages = []; // Hoặc giữ nguyên messages hiện tại
+      });
+
+      // Hiển thị dialog lỗi nếu cần
+      _showErrorDialog('Có lỗi xảy ra khi tải tin nhắn');
+    }
   }
 
-  // void loadOfflineMessages() async {
-  //   List<Message> cached = await MessageDatabase.getMessages(widget.friendId);
-  //   setState(() {
-  //     messages = cached;
+  // Helper method để hiển thị thông báo offline
+  void _showOfflineMessage() {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đang sử dụng dữ liệu offline'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  // Helper method để hiển thị dialog lỗi
+  void _showErrorDialog(String message) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Lỗi'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  loadMessage(); // Retry
+                },
+                child: const Text('Thử lại'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // void loadMessage() async {
+  //   if (!mounted) return;
+  //
+  //   try {
+  //     final apiMessages = await MessageService.fetchMessages(widget.friendId);
+  //
+  //     RealmMessageService.saveMessagesToLocal(
+  //       widget.friendId,
+  //       apiMessages.map((m) => m.messageToJson()).toList(),
+  //     );
+  //
+  //     if (!mounted) return;
+  //     setState(() {
+  //       messages = apiMessages;
+  //     });
+  //   } catch (e) {
+  //     print('Không thể gọi API, dùng dữ liệu Realm offline. $e');
+  //   }
+  //
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     _scrollToBottom();
   //   });
   // }
 
