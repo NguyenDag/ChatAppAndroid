@@ -57,6 +57,11 @@ dependencies:
 
 #  Save data when offline
   realm: ^20.1.1
+
+#  Web socket
+  web_socket_channel: ^3.0.3
+  json_annotation: ^4.9.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -68,6 +73,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   build_runner: ^2.4.15
+#  Web socket
+  json_serializable: ^6.9.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
