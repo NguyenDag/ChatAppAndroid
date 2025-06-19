@@ -1,6 +1,6 @@
 import 'package:realm/realm.dart';
 
-import '../models/friend.dart';
+import '../models/opp_model.dart';
 
 class RealmFriendService {
   static late Realm _realm;

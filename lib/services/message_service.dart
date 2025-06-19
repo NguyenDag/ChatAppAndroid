@@ -6,7 +6,7 @@ import 'package:path/path.dart' as path;
 import 'package:myapp/services/token_service.dart';
 
 import '../constants/api_constants.dart';
-import '../models/message.dart';
+import '../models/opp_model.dart';
 
 class MessageService {
   static Future<List<Message>> fetchMessages(String friendId) async {

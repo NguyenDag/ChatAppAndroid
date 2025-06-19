@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/constants/api_constants.dart';
-import 'package:myapp/models/friend.dart';
+import 'package:myapp/models/opp_model.dart';
 import 'package:myapp/pages/login_page.dart';
 import 'package:myapp/pages/online_chat.dart';
 import 'package:myapp/services/realm_friend_service.dart';
@@ -199,39 +199,65 @@ class MyHome extends State<FriendsList> {
                     await loadFriends();
                   },
                   child: ListView.builder(
+                    reverse: true,
                     itemCount: friendsList.length,
                     // physics: BouncingScrollPhysics(),//hiệu ứng cuộn 'giật nhẹ lại'
                     itemBuilder: (context, index) {
-                      final friend = friendsList[index];
-                      String? content = friend['Content'];
-                      final files = friend['Files'];
-                      final images = friend['Images'];
+                      final f = friendsList[index];
+                      String? content = f['Content'];
+                      // final files = f['Files'].size() != 0 ? f['Files'][0]['urlFile'] : null;
+                      // final images = f['Images'].size() != 0 ? f['Images'][0]['urlImage'] : null;
 
-                      if (files is List && files.isNotEmpty) {
+                      final List<String> fileUrls =
+                          (f['Files'] != null && f['Files'] is List)
+                              ? List<String>.from(
+                                f['Files'].map<String>(
+                                  (file) => file['urlFile'].toString(),
+                                ),
+                              )
+                              : [];
+
+                      // Chuyển Images thành List<String> url
+                      final List<String> imageUrls =
+                          (f['Images'] != null && f['Images'] is List)
+                              ? List<String>.from(
+                                f['Images'].map<String>(
+                                  (img) => img['urlImage'].toString(),
+                                ),
+                              )
+                              : [];
+
+                      if (fileUrls.isNotEmpty) {
                         content = 'Đã gửi file cho bạn!';
-                      } else if (images is List && images.isNotEmpty) {
+                      } else if (imageUrls.isNotEmpty) {
                         content = 'Đã gửi ảnh cho bạn!';
-                      } else if (content == '' &&
-                          files == null &&
-                          images == null) {
+                      } else if ((content == null || content == '') &&
+                          fileUrls.isEmpty &&
+                          imageUrls.isEmpty) {
                         content = 'Hãy bắt đầu cuộc trò chuyện';
                       }
-                      final name = friend['FullName'] ?? 'No Name';
+                      final fullName = f['FullName'] ?? 'No Name';
                       final avatar =
-                          (friend['Avatar'] != null)
-                              ? ApiConstants.getUrl(friend['Avatar'])
+                          (f['Avatar'] != null)
+                              ? ApiConstants.getUrl(f['Avatar'])
                               : 'https://static2.yan.vn/YanNews/2167221/202102/facebook-cap-nhat-avatar-doi-voi-tai-khoan-khong-su-dung-anh-dai-dien-e4abd14d.jpg';
-                      final isOnline = friend['isOnline'];
-                      final friendId = friend['FriendID'];
-                      final isSend = friend['isSend'];
-                      return FriendTile(
-                        name: name,
-                        avatarUrl: avatar,
-                        isOnline: isOnline,
-                        friendID: friendId,
+                      final isOnline = f['isOnline'];
+                      final friendId = f['FriendID'];
+                      final isSend = f['isSend'];
+                      final username = f['Username'];
+
+                      final Friend friend = Friend(
+                        friendId,
+                        fullName,
+                        username,
+                        isOnline ?? false,
+                        isSend ?? 0,
                         content: content,
-                        isSend: isSend,
+                        // files: fileUrls,
+                        // images: imageUrls,
                       );
+
+                      return FriendTile(avatarUrl: avatar, friend: friend);
                     },
                   ),
                 ),
@@ -245,22 +271,10 @@ class MyHome extends State<FriendsList> {
 }
 
 class FriendTile extends StatelessWidget {
-  final String name;
   final String avatarUrl;
-  final bool isOnline;
-  final String friendID;
-  final String? content;
-  final int isSend;
+  final Friend friend;
 
-  const FriendTile({
-    super.key,
-    required this.name,
-    required this.avatarUrl,
-    required this.isOnline,
-    required this.friendID,
-    required this.content,
-    required this.isSend,
-  });
+  const FriendTile({super.key, required this.avatarUrl, required this.friend});
 
   @override
   Widget build(BuildContext context) {
@@ -271,10 +285,10 @@ class FriendTile extends StatelessWidget {
           MaterialPageRoute(
             builder:
                 (context) => OnlineChat(
-                  name: name,
+                  name: friend.fullName,
                   avatarUrl: avatarUrl,
-                  friendId: friendID,
-                  isOnline: isOnline,
+                  friendId: friend.friendId,
+                  isOnline: friend.isOnline,
                 ),
           ),
         );
@@ -282,7 +296,7 @@ class FriendTile extends StatelessWidget {
       leading: Stack(
         children: [
           CircleAvatar(backgroundImage: NetworkImage(avatarUrl), radius: 24),
-          if (isOnline)
+          if (friend.isOnline)
             Positioned(
               bottom: 0,
               right: 0,
@@ -301,14 +315,14 @@ class FriendTile extends StatelessWidget {
       ),
       title: Padding(
         padding: const EdgeInsets.only(left: 10.0),
-        child: Text(name),
+        child: Text(FriendService.getDisplayName(friend)),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(left: 10.0),
         child: Text(
-          content!,
+          friend.content!,
           style:
-              isSend == 0
+              friend.isSend == 0
                   ? TextStyle(fontSize: 12, fontWeight: FontWeight.bold)
                   : TextStyle(fontSize: 12),
         ),

@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:myapp/constants/api_constants.dart';
 import 'package:myapp/services/token_service.dart';
+import 'package:realm/realm.dart';
+
+import '../models/opp_model.dart';
 
 class FriendService {
   static Future<List<Map<String, dynamic>>> fetchFriends() async {
@@ -28,13 +31,38 @@ class FriendService {
       final status = body['status'];
       if (status != null && status == 1) {
         List<dynamic> rawList = body['data'];
-        return rawList.cast<Map<String, dynamic>>();
+
+        List<Map<String, dynamic>> processedList =
+            rawList.map<Map<String, dynamic>>((item) {
+              final content = item['content'];
+              final files = item['files'];
+              final images = item['images'];
+
+              // Xử lý nội dung hiển thị
+              if (content == null ||
+                  (content is String && content.trim().isEmpty)) {
+                if (files != null && files is List && files.isNotEmpty) {
+                  item['content'] = 'Đã gửi files';
+                } else if (images != null &&
+                    images is List &&
+                    images.isNotEmpty) {
+                  item['content'] = 'Đã gửi ảnh';
+                } else {
+                  item['content'] = 'Hãy bắt đầu cuộc trò chuyện!';
+                }
+              }
+
+              return item.cast<String, dynamic>();
+            }).toList();
+
+        return processedList;
       } else {
         print('Lỗi API: ${body['message']}');
       }
     } else {
       print('Lỗi server: ${response.statusCode}');
     }
+
     return [];
   }
 
@@ -46,5 +74,18 @@ class FriendService {
       final name = friend['FullName']?.toLowerCase() ?? '';
       return name.contains(query.toLowerCase());
     }).toList();
+  }
+
+  static void setLocalNickname(Realm realm, String friendId, String newNickname) {
+    final friend = realm.find<Friend>(friendId);
+    if (friend != null) {
+      realm.write(() {
+        friend.localNickname = newNickname;
+      });
+    }
+  }
+
+  static String getDisplayName(Friend friend) {
+    return friend.localNickname?.isNotEmpty == true ? friend.localNickname! : friend.fullName;
   }
 }

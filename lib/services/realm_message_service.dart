@@ -1,6 +1,6 @@
 import 'package:realm/realm.dart';
 
-import '../models/message.dart';
+import '../models/opp_model.dart';
 
 class RealmMessageService {
   static Realm? _realm;

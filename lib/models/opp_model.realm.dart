@@ -1,7 +1,7 @@
 // dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'message.dart';
+part of 'opp_model.dart';
 
 // **************************************************************************
 // RealmObjectGenerator
@@ -9,6 +9,175 @@ part of 'message.dart';
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
+class Friend extends _Friend with RealmEntity, RealmObjectBase, RealmObject {
+  Friend(
+    String friendId,
+    String fullName,
+    String username,
+    bool isOnline,
+    int isSend, {
+    String? content,
+    Iterable<FileModel> files = const [],
+    Iterable<FileModel> images = const [],
+    String? localNickname,
+  }) {
+    RealmObjectBase.set(this, 'friendId', friendId);
+    RealmObjectBase.set(this, 'fullName', fullName);
+    RealmObjectBase.set(this, 'username', username);
+    RealmObjectBase.set(this, 'content', content);
+    RealmObjectBase.set<RealmList<FileModel>>(
+      this,
+      'files',
+      RealmList<FileModel>(files),
+    );
+    RealmObjectBase.set<RealmList<FileModel>>(
+      this,
+      'images',
+      RealmList<FileModel>(images),
+    );
+    RealmObjectBase.set(this, 'isOnline', isOnline);
+    RealmObjectBase.set(this, 'isSend', isSend);
+    RealmObjectBase.set(this, 'localNickname', localNickname);
+  }
+
+  Friend._();
+
+  @override
+  String get friendId =>
+      RealmObjectBase.get<String>(this, 'friendId') as String;
+  @override
+  set friendId(String value) => RealmObjectBase.set(this, 'friendId', value);
+
+  @override
+  String get fullName =>
+      RealmObjectBase.get<String>(this, 'fullName') as String;
+  @override
+  set fullName(String value) => RealmObjectBase.set(this, 'fullName', value);
+
+  @override
+  String get username =>
+      RealmObjectBase.get<String>(this, 'username') as String;
+  @override
+  set username(String value) => RealmObjectBase.set(this, 'username', value);
+
+  @override
+  String? get content =>
+      RealmObjectBase.get<String>(this, 'content') as String?;
+  @override
+  set content(String? value) => RealmObjectBase.set(this, 'content', value);
+
+  @override
+  RealmList<FileModel> get files =>
+      RealmObjectBase.get<FileModel>(this, 'files') as RealmList<FileModel>;
+  @override
+  set files(covariant RealmList<FileModel> value) =>
+      throw RealmUnsupportedSetError();
+
+  @override
+  RealmList<FileModel> get images =>
+      RealmObjectBase.get<FileModel>(this, 'images') as RealmList<FileModel>;
+  @override
+  set images(covariant RealmList<FileModel> value) =>
+      throw RealmUnsupportedSetError();
+
+  @override
+  bool get isOnline => RealmObjectBase.get<bool>(this, 'isOnline') as bool;
+  @override
+  set isOnline(bool value) => RealmObjectBase.set(this, 'isOnline', value);
+
+  @override
+  int get isSend => RealmObjectBase.get<int>(this, 'isSend') as int;
+  @override
+  set isSend(int value) => RealmObjectBase.set(this, 'isSend', value);
+
+  @override
+  String? get localNickname =>
+      RealmObjectBase.get<String>(this, 'localNickname') as String?;
+  @override
+  set localNickname(String? value) =>
+      RealmObjectBase.set(this, 'localNickname', value);
+
+  @override
+  Stream<RealmObjectChanges<Friend>> get changes =>
+      RealmObjectBase.getChanges<Friend>(this);
+
+  @override
+  Stream<RealmObjectChanges<Friend>> changesFor([List<String>? keyPaths]) =>
+      RealmObjectBase.getChangesFor<Friend>(this, keyPaths);
+
+  @override
+  Friend freeze() => RealmObjectBase.freezeObject<Friend>(this);
+
+  EJsonValue toEJson() {
+    return <String, dynamic>{
+      'friendId': friendId.toEJson(),
+      'fullName': fullName.toEJson(),
+      'username': username.toEJson(),
+      'content': content.toEJson(),
+      'files': files.toEJson(),
+      'images': images.toEJson(),
+      'isOnline': isOnline.toEJson(),
+      'isSend': isSend.toEJson(),
+      'localNickname': localNickname.toEJson(),
+    };
+  }
+
+  static EJsonValue _toEJson(Friend value) => value.toEJson();
+  static Friend _fromEJson(EJsonValue ejson) {
+    if (ejson is! Map<String, dynamic>) return raiseInvalidEJson(ejson);
+    return switch (ejson) {
+      {
+        'friendId': EJsonValue friendId,
+        'fullName': EJsonValue fullName,
+        'username': EJsonValue username,
+        'isOnline': EJsonValue isOnline,
+        'isSend': EJsonValue isSend,
+      } =>
+        Friend(
+          fromEJson(friendId),
+          fromEJson(fullName),
+          fromEJson(username),
+          fromEJson(isOnline),
+          fromEJson(isSend),
+          content: fromEJson(ejson['content']),
+          files: fromEJson(ejson['files']),
+          images: fromEJson(ejson['images']),
+          localNickname: fromEJson(ejson['localNickname']),
+        ),
+      _ => raiseInvalidEJson(ejson),
+    };
+  }
+
+  static final schema = () {
+    RealmObjectBase.registerFactory(Friend._);
+    register(_toEJson, _fromEJson);
+    return const SchemaObject(ObjectType.realmObject, Friend, 'Friend', [
+      SchemaProperty('friendId', RealmPropertyType.string, primaryKey: true),
+      SchemaProperty('fullName', RealmPropertyType.string),
+      SchemaProperty('username', RealmPropertyType.string),
+      SchemaProperty('content', RealmPropertyType.string, optional: true),
+      SchemaProperty(
+        'files',
+        RealmPropertyType.object,
+        linkTarget: 'FileModel',
+        collectionType: RealmCollectionType.list,
+      ),
+      SchemaProperty(
+        'images',
+        RealmPropertyType.object,
+        linkTarget: 'FileModel',
+        collectionType: RealmCollectionType.list,
+      ),
+      SchemaProperty('isOnline', RealmPropertyType.bool),
+      SchemaProperty('isSend', RealmPropertyType.int),
+      SchemaProperty('localNickname', RealmPropertyType.string, optional: true),
+    ]);
+  }();
+
+  @override
+  SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
+}
+
 class Message extends _Message with RealmEntity, RealmObjectBase, RealmObject {
   Message(
     String id,
