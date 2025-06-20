@@ -27,9 +27,7 @@ class FileService {
     String fileUrl,
     String fileName,
   ) async {
-    // Xin quyền truy cập bộ nhớ
     if (!await _requestPermission()) {
-      print("Permission denied");
       return;
     }
 
@@ -42,7 +40,6 @@ class FileService {
     }
 
     if (downloadDir == null) {
-      print('Download folder not found');
       return;
     }
 
@@ -61,7 +58,6 @@ class FileService {
       );
 
       await file.writeAsBytes(response.data);
-      print('File saved to: ${file.path}');
     } catch (e) {
       print('Download error: $e');
     }

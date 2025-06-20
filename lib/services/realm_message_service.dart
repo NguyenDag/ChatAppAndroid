@@ -68,7 +68,6 @@ class RealmMessageService {
       final messages =
           jsonList
               .map((json) => messageFromJson(json, friendId))
-              .where((message) => message != null)
               .cast<Message>()
               .toList();
 

@@ -8,10 +8,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // đảm bảo mọi thứ được khởi tạo
   final isLoggedIn = await LoginService.isLoggedInWithinAWeek();
   final hasInternet = await NetworkService.hasInternet();
-  runApp(MyApp(isLoggedIn: isLoggedIn, hasInternet: hasInternet,));
+  runApp(MyApp(isLoggedIn: isLoggedIn, hasInternet: hasInternet));
 }
 
-class MyApp extends StatelessWidget {    
+class MyApp extends StatelessWidget {
   final bool isLoggedIn;
   final bool hasInternet;
 
@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: !isLoggedIn ? LoginPage() : FriendsList(),
-
     );
   }
 }

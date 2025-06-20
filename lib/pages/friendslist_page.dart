@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/constants/api_constants.dart';
 import 'package:myapp/models/opp_model.dart';
@@ -14,6 +13,8 @@ import '../services/friend_service.dart';
 late Size mq;
 
 class FriendsList extends StatefulWidget {
+  const FriendsList({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return MyHome();
@@ -49,13 +50,16 @@ class MyHome extends State<FriendsList> {
       // Gọi API nếu có mạng
       final apiFriends = await FriendService.fetchFriends();
 
-      // Lưu vào Realm
+      // Lưu vào Realm(ghi đè fullname, ... nhưng giữ localNickName)
       RealmFriendService.saveFriendsToLocal(apiFriends);
+
+      //lấy từ realm có đầy đủ localNickName
+      final updatedFriends = RealmFriendService.getAllLocalFriends();
 
       // Cập nhật hiển thị
       setState(() {
-        friendsList = apiFriends;
-        originalFriendsList = apiFriends;
+        friendsList = updatedFriends.map((f) => f.friendToJson()).toList();
+        originalFriendsList = friendsList;
       });
     } catch (e) {
       print('Không thể gọi API, dùng dữ liệu Realm offline. $e');
@@ -199,42 +203,40 @@ class MyHome extends State<FriendsList> {
                     await loadFriends();
                   },
                   child: ListView.builder(
-                    reverse: true,
                     itemCount: friendsList.length,
                     // physics: BouncingScrollPhysics(),//hiệu ứng cuộn 'giật nhẹ lại'
                     itemBuilder: (context, index) {
                       final f = friendsList[index];
                       String? content = f['Content'];
-                      // final files = f['Files'].size() != 0 ? f['Files'][0]['urlFile'] : null;
-                      // final images = f['Images'].size() != 0 ? f['Images'][0]['urlImage'] : null;
 
-                      final List<String> fileUrls =
-                          (f['Files'] != null && f['Files'] is List)
-                              ? List<String>.from(
-                                f['Files'].map<String>(
-                                  (file) => file['urlFile'].toString(),
+                      final filesJson = f['Files'] as List<dynamic>? ?? [];
+                      final List<FileModel> tempFiles =
+                          filesJson
+                              .map(
+                                (e) => fileModelFromJson(
+                                  e as Map<String, dynamic>,
                                 ),
                               )
-                              : [];
+                              .toList();
 
-                      // Chuyển Images thành List<String> url
-                      final List<String> imageUrls =
-                          (f['Images'] != null && f['Images'] is List)
-                              ? List<String>.from(
-                                f['Images'].map<String>(
-                                  (img) => img['urlImage'].toString(),
+                      final imagesJson = f['Images'] as List<dynamic>? ?? [];
+                      final List<FileModel> tempImages =
+                          imagesJson
+                              .map(
+                                (e) => fileModelFromJson(
+                                  e as Map<String, dynamic>,
                                 ),
                               )
-                              : [];
+                              .toList();
 
-                      if (fileUrls.isNotEmpty) {
+                      if (tempFiles.isNotEmpty) {
                         content = 'Đã gửi file cho bạn!';
-                      } else if (imageUrls.isNotEmpty) {
+                      } else if (tempImages.isNotEmpty) {
                         content = 'Đã gửi ảnh cho bạn!';
                       } else if ((content == null || content == '') &&
-                          fileUrls.isEmpty &&
-                          imageUrls.isEmpty) {
-                        content = 'Hãy bắt đầu cuộc trò chuyện';
+                          tempFiles.isEmpty &&
+                          tempImages.isEmpty) {
+                        content = 'Hãy bắt đầu cuộc trò chuyện!';
                       }
                       final fullName = f['FullName'] ?? 'No Name';
                       final avatar =
@@ -253,8 +255,8 @@ class MyHome extends State<FriendsList> {
                         isOnline ?? false,
                         isSend ?? 0,
                         content: content,
-                        // files: fileUrls,
-                        // images: imageUrls,
+                        files: tempFiles,
+                        images: tempImages,
                       );
 
                       return FriendTile(avatarUrl: avatar, friend: friend);
@@ -283,13 +285,9 @@ class FriendTile extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder:
-                (context) => OnlineChat(
-                  name: friend.fullName,
-                  avatarUrl: avatarUrl,
-                  friendId: friend.friendId,
-                  isOnline: friend.isOnline,
-                ),
+            builder: (context) {
+              return OnlineChat(friend: friend, avatarUrl: avatarUrl);
+            },
           ),
         );
       },

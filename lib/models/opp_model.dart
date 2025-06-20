@@ -2,6 +2,16 @@ import 'package:realm/realm.dart';
 
 part 'opp_model.realm.dart';
 
+// Realm model for File (image or file)
+@RealmModel()
+class _FileModel {
+  @PrimaryKey()
+  late String id;
+
+  late String url;
+  late String fileName;
+}
+
 @RealmModel()
 class _Friend {
   @PrimaryKey()
@@ -34,14 +44,18 @@ class _Message {
   late int messageType;
 }
 
-// Realm model for File (image or file)
-@RealmModel()
-class _FileModel {
-  @PrimaryKey()
-  late String id;
+// ------------------ FileModel JSON Helper ------------------
 
-  late String url;
-  late String fileName;
+FileModel fileModelFromJson(Map<String, dynamic> json) {
+  return FileModel(
+    json['_id'] as String? ?? '',
+    json['urlImage'] as String? ?? json['urlFile'] as String? ?? '',
+    json['FileName'] as String? ?? '',
+  );
+}
+
+Map<String, dynamic> fileModelToJson(FileModel file) {
+  return {'_id': file.id, 'urlFile': file.url, 'FileName': file.fileName};
 }
 
 //-----------Friend----------
@@ -51,8 +65,8 @@ extension FriendJson on Friend {
     'FullName': fullName,
     'Username': username,
     'Content': content,
-    'Files': files.map((e) => e.toString()).toList(),
-    'Images': images.map((e) => e.toString()).toList(),
+    'Files': files.map(fileModelToJson).toList(),
+    'Images': images.map(fileModelToJson).toList(),
     'isOnline': isOnline,
     'isSend': isSend,
   };
@@ -81,20 +95,6 @@ Friend friendFromJson(Map<String, dynamic> json) {
     files: tempFiles,
     images: tempImages,
   );
-}
-
-// ------------------ FileModel JSON Helper ------------------
-
-FileModel fileModelFromJson(Map<String, dynamic> json) {
-  return FileModel(
-    json['_id'] as String? ?? '',
-    json['urlImage'] as String? ?? json['urlFile'] as String? ?? '',
-    json['FileName'] as String? ?? '',
-  );
-}
-
-Map<String, dynamic> fileModelToJson(FileModel file) {
-  return {'_id': file.id, 'urlFile': file.url, 'FileName': file.fileName};
 }
 
 // ------------------ Message JSON Extension ------------------

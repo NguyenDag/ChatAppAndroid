@@ -48,7 +48,6 @@ class UserStorage {
   static Future<Map<String, dynamic>?> fetchUserInfo() async{
     final token = await TokenService.getToken();
     if (token == null) {
-      print('You need to login!');
       return null;
     }
     final endPoint = '/user/info';

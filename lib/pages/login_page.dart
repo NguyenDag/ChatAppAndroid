@@ -13,6 +13,8 @@ import '../pages/register_page.dart';
 import '../services/user_storage.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _LoginPageState();

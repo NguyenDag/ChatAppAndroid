@@ -12,6 +12,8 @@ import '../constants/api_constants.dart';
 // import 'package:path_provider/path_provider.dart'; //liên quan xử lý file
 
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _RegisterPageState();
@@ -79,7 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _errorText;
   bool _isLoading = false;
 
-  void Register() async {
+  void _register() async {
     if (_isLoading) return;
     setState(() {
       _isLoading = true; // Bắt đầu loading
@@ -222,7 +224,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       _isLoading
                           ? const Center(child: CircularProgressIndicator())
                           : ElevatedButton(
-                            onPressed: _isLoading ? null : Register,
+                            onPressed: _isLoading ? null : _register,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ColorConstants.buttonColor,
                               shape: RoundedRectangleBorder(

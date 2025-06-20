@@ -11,7 +11,6 @@ class FriendService {
   static Future<List<Map<String, dynamic>>> fetchFriends() async {
     final token = await TokenService.getToken();
     if (token == null) {
-      print('You need to login!');
       return [];
     }
 
@@ -76,8 +75,8 @@ class FriendService {
     }).toList();
   }
 
-  static void setLocalNickname(Realm realm, String friendId, String newNickname) {
-    final friend = realm.find<Friend>(friendId);
+  static void setLocalNickname(Realm realm, Friend f, String newNickname) {
+    final friend = realm.find<Friend>(f.friendId);
     if (friend != null) {
       realm.write(() {
         friend.localNickname = newNickname;

@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:myapp/services/friend_service.dart';
+import 'package:myapp/services/realm_friend_service.dart';
 import 'package:path/path.dart' as path;
 import 'package:myapp/services/token_service.dart';
 
@@ -12,7 +15,6 @@ class MessageService {
   static Future<List<Message>> fetchMessages(String friendId) async {
     final token = await TokenService.getToken();
     if (token == null) {
-      print('You need to login!');
       return [];
     }
 
@@ -33,7 +35,9 @@ class MessageService {
       if (status != null && status == 1) {
         final List<dynamic> rawList = body['data'];
         return rawList
-            .map((item) => messageFromJson(item as Map<String, dynamic>, friendId))
+            .map(
+              (item) => messageFromJson(item as Map<String, dynamic>, friendId),
+            )
             .toList();
       } else {
         print('Lỗi API: ${body['message']}');
@@ -52,7 +56,6 @@ class MessageService {
   }) async {
     final token = await TokenService.getToken();
     if (token == null) {
-      print('You need to login!');
       return null;
     }
 
@@ -184,5 +187,38 @@ class MessageService {
     if (isFileUrl(url)) return 'file';
     if (content != null && content.isNotEmpty) return 'text';
     return 'unknown';
+  }
+
+  static void showRenameDialog(BuildContext context, Friend friend) {
+    final controller = TextEditingController(
+      text: friend.localNickname ?? friend.fullName,
+    );
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Đổi biệt danh'),
+            content: TextField(
+              controller: controller,
+              decoration: const InputDecoration(hintText: 'Nhập biệt danh mới'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final newName = controller.text.trim();
+                  if (newName.isNotEmpty && newName != friend.fullName) {
+                    FriendService.setLocalNickname(RealmFriendService.realm, friend, newName);
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text('Lưu'),
+              ),
+            ],
+          ),
+    );
   }
 }

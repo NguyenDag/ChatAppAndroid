@@ -19,18 +19,14 @@ import '../services/realm_message_service.dart';
 late Size mq;
 
 class OnlineChat extends StatefulWidget {
-  final String name;
+  // final String name;
+  // final String avatarUrl;
+  // final String friendId;
+  // final bool isOnline;
+  final Friend friend;
   final String avatarUrl;
-  final String friendId;
-  final bool isOnline;
 
-  const OnlineChat({
-    super.key,
-    required this.name,
-    required this.avatarUrl,
-    required this.friendId,
-    required this.isOnline,
-  });
+  const OnlineChat({super.key, required this.friend, required this.avatarUrl});
 
   @override
   State<StatefulWidget> createState() {
@@ -62,7 +58,7 @@ class MyWidget extends State<OnlineChat> {
 
     try {
       final offlineMessages = RealmMessageService.getMessagesForFriend(
-        widget.friendId,
+        widget.friend.friendId,
       );
 
       if (!mounted) return;
@@ -79,12 +75,14 @@ class MyWidget extends State<OnlineChat> {
       }
 
       try {
-        final apiMessages = await MessageService.fetchMessages(widget.friendId);
+        final apiMessages = await MessageService.fetchMessages(
+          widget.friend.friendId,
+        );
 
         if (!mounted) return;
 
         await RealmMessageService.saveMessagesToLocal(
-          widget.friendId,
+          widget.friend.friendId,
           apiMessages.map((m) => m.messageToJson()).toList(),
         );
 
@@ -233,7 +231,7 @@ class MyWidget extends State<OnlineChat> {
                   backgroundImage: NetworkImage(widget.avatarUrl),
                   radius: 24,
                 ),
-                if (widget.isOnline)
+                if (widget.friend.isOnline)
                   Positioned(
                     right: 0,
                     bottom: 0,
@@ -255,35 +253,52 @@ class MyWidget extends State<OnlineChat> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.name,
+                    widget.friend.fullName,
                     style: TextStyle(
                       fontFamily: 'Roboto',
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                  widget.isOnline
-                      ? Text(
-                        'Trực tuyến',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w100,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      )
-                      : Text(
-                        'Offline',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w100,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
+                  Text(
+                    widget.friend.isOnline ? 'Trực tuyến' : 'Offline',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w100,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
           ],
         ),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'nickname') {
+                MessageService.showRenameDialog(context, widget.friend);
+              } else if (value == 'color') {
+                // _showColorPicker(context, widget.friend);
+              }
+            },
+            itemBuilder:
+                (BuildContext context) => [
+                  const PopupMenuItem<String>(
+                    value: 'nickname',
+                    child: Text('Đổi biệt danh'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'color',
+                    child: Text('Đổi màu sắc'),
+                  ),
+                ],
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.only(),
@@ -333,10 +348,10 @@ class MyWidget extends State<OnlineChat> {
                       ContentMessage(
                         msg: messages[index],
                         index: index,
-                        name: widget.name,
+                        name: widget.friend.fullName,
                         messages: messages,
                         avatarUrl: widget.avatarUrl,
-                        isOnline: widget.isOnline,
+                        isOnline: widget.friend.isOnline,
                       ),
                     ],
                   );
@@ -446,7 +461,7 @@ class MyWidget extends State<OnlineChat> {
                               if (!hasText && !hasImage && !hasFiles) return;
 
                               final newMsg = await MessageService.sendMessage(
-                                friendId: widget.friendId,
+                                friendId: widget.friend.friendId,
                                 content: _emojiController.text.trim(),
                                 imageFiles: hasImage ? _pickedImages : null,
                                 otherFiles: hasFiles ? _pickedFiles : null,
@@ -534,21 +549,17 @@ class MyWidget extends State<OnlineChat> {
   }
 
   String formatDateGroup(DateTime date) {
-
-
     final now = DateTime.now();
     DateTime timeNow = MessageJson.formatDate(now);
     DateTime timeDate = MessageJson.formatDate(date);
-    final difference = timeNow.difference(timeDate);
+    final difference = timeNow.difference(timeDate).inDays;
 
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
+    if (difference == 0) {
+      return 'Hôm nay';
+    } else if (difference == 1) {
+      return 'Hôm qua';
     } else {
-      return 'Just now';
+      return DateFormat('dd/MM/yyyy').format(date);
     }
   }
 }
