@@ -28,6 +28,14 @@ class _Friend {
   String? localNickname;
 }
 
+@RealmModel()
+class _UserFriendList {
+  @PrimaryKey()
+  late String username; // username của người dùng
+
+  late List<_Friend> friends;
+}
+
 // Realm model for Message
 @RealmModel()
 class _Message {
@@ -69,6 +77,7 @@ extension FriendJson on Friend {
     'Images': images.map(fileModelToJson).toList(),
     'isOnline': isOnline,
     'isSend': isSend,
+    'localNickname': localNickname,
   };
 }
 
@@ -94,6 +103,7 @@ Friend friendFromJson(Map<String, dynamic> json) {
     content: json['Content'] as String?,
     files: tempFiles,
     images: tempImages,
+    localNickname:  json['localNickname'] as String?,
   );
 }
 

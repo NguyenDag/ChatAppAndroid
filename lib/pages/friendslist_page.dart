@@ -40,7 +40,8 @@ class MyHome extends State<FriendsList> {
   }
 
   Future<void> loadFriends() async {
-    final offlineFriends = RealmFriendService.getAllLocalFriends();
+    final username = await TokenService.getUsername();
+    final offlineFriends = RealmFriendService.getAllLocalFriends(username);
     setState(() {
       friendsList = offlineFriends.map((f) => f.friendToJson()).toList();
       originalFriendsList = friendsList;
@@ -48,17 +49,26 @@ class MyHome extends State<FriendsList> {
 
     try {
       // Gọi API nếu có mạng
+
       final apiFriends = await FriendService.fetchFriends();
 
       // Lưu vào Realm(ghi đè fullname, ... nhưng giữ localNickName)
-      RealmFriendService.saveFriendsToLocal(apiFriends);
+      RealmFriendService.saveFriendsToLocal(apiFriends, username);
 
       //lấy từ realm có đầy đủ localNickName
-      final updatedFriends = RealmFriendService.getAllLocalFriends();
+      final updatedFriends = RealmFriendService.getAllLocalFriends(username);
 
       // Cập nhật hiển thị
       setState(() {
         friendsList = updatedFriends.map((f) => f.friendToJson()).toList();
+
+        // for (var friend in friendsList) {
+        //   print('--- Friend ---');
+        //   friend.forEach((key, value) {
+        //     print('$key: $value');
+        //   });
+        // }
+
         originalFriendsList = friendsList;
       });
     } catch (e) {
@@ -247,6 +257,7 @@ class MyHome extends State<FriendsList> {
                       final friendId = f['FriendID'];
                       final isSend = f['isSend'];
                       final username = f['Username'];
+                      final localNickname = f['localNickname'];
 
                       final Friend friend = Friend(
                         friendId,
@@ -257,6 +268,7 @@ class MyHome extends State<FriendsList> {
                         content: content,
                         files: tempFiles,
                         images: tempImages,
+                        localNickname: localNickname,
                       );
 
                       return FriendTile(avatarUrl: avatar, friend: friend);

@@ -190,7 +190,7 @@ class MessageService {
   }
 
   static void showRenameDialog(BuildContext context, Friend friend) {
-    final controller = TextEditingController(
+    final controller_nickname = TextEditingController(
       text: friend.localNickname ?? friend.fullName,
     );
     showDialog(
@@ -199,7 +199,7 @@ class MessageService {
           (context) => AlertDialog(
             title: const Text('Đổi biệt danh'),
             content: TextField(
-              controller: controller,
+              controller: controller_nickname,
               decoration: const InputDecoration(hintText: 'Nhập biệt danh mới'),
             ),
             actions: [
@@ -209,7 +209,7 @@ class MessageService {
               ),
               TextButton(
                 onPressed: () {
-                  final newName = controller.text.trim();
+                  final newName = controller_nickname.text.trim();
                   if (newName.isNotEmpty && newName != friend.fullName) {
                     FriendService.setLocalNickname(RealmFriendService.realm, friend, newName);
                     Navigator.pop(context);

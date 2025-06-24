@@ -14,15 +14,12 @@ import 'package:saver_gallery/saver_gallery.dart';
 
 import '../constants/api_constants.dart';
 import '../services/file_service.dart';
+import '../services/friend_service.dart';
 import '../services/realm_message_service.dart';
 
 late Size mq;
 
 class OnlineChat extends StatefulWidget {
-  // final String name;
-  // final String avatarUrl;
-  // final String friendId;
-  // final bool isOnline;
   final Friend friend;
   final String avatarUrl;
 
@@ -166,30 +163,6 @@ class MyWidget extends State<OnlineChat> {
     );
   }
 
-  // void loadMessage() async {
-  //   if (!mounted) return;
-  //
-  //   try {
-  //     final apiMessages = await MessageService.fetchMessages(widget.friendId);
-  //
-  //     RealmMessageService.saveMessagesToLocal(
-  //       widget.friendId,
-  //       apiMessages.map((m) => m.messageToJson()).toList(),
-  //     );
-  //
-  //     if (!mounted) return;
-  //     setState(() {
-  //       messages = apiMessages;
-  //     });
-  //   } catch (e) {
-  //     print('Không thể gọi API, dùng dữ liệu Realm offline. $e');
-  //   }
-  //
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     _scrollToBottom();
-  //   });
-  // }
-
   void _scrollToBottom() {
     _scrollController.animateTo(
       _scrollController.position.maxScrollExtent,
@@ -247,14 +220,14 @@ class MyWidget extends State<OnlineChat> {
                   ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
+            const SizedBox(width: 8),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.friend.fullName,
-                    style: TextStyle(
+                    FriendService.getDisplayName(widget.friend),
+                    style: const TextStyle(
                       fontFamily: 'Roboto',
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -270,6 +243,7 @@ class MyWidget extends State<OnlineChat> {
                       fontStyle: FontStyle.italic,
                     ),
                     overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ],
               ),
@@ -348,7 +322,7 @@ class MyWidget extends State<OnlineChat> {
                       ContentMessage(
                         msg: messages[index],
                         index: index,
-                        name: widget.friend.fullName,
+                        name: FriendService.getDisplayName(widget.friend),
                         messages: messages,
                         avatarUrl: widget.avatarUrl,
                         isOnline: widget.friend.isOnline,

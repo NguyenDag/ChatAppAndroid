@@ -251,6 +251,86 @@ class Friend extends _Friend with RealmEntity, RealmObjectBase, RealmObject {
   SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
 }
 
+class UserFriendList extends _UserFriendList
+    with RealmEntity, RealmObjectBase, RealmObject {
+  UserFriendList(String username, {Iterable<Friend> friends = const []}) {
+    RealmObjectBase.set(this, 'username', username);
+    RealmObjectBase.set<RealmList<Friend>>(
+      this,
+      'friends',
+      RealmList<Friend>(friends),
+    );
+  }
+
+  UserFriendList._();
+
+  @override
+  String get username =>
+      RealmObjectBase.get<String>(this, 'username') as String;
+  @override
+  set username(String value) => RealmObjectBase.set(this, 'username', value);
+
+  @override
+  RealmList<Friend> get friends =>
+      RealmObjectBase.get<Friend>(this, 'friends') as RealmList<Friend>;
+  @override
+  set friends(covariant RealmList<Friend> value) =>
+      throw RealmUnsupportedSetError();
+
+  @override
+  Stream<RealmObjectChanges<UserFriendList>> get changes =>
+      RealmObjectBase.getChanges<UserFriendList>(this);
+
+  @override
+  Stream<RealmObjectChanges<UserFriendList>> changesFor([
+    List<String>? keyPaths,
+  ]) => RealmObjectBase.getChangesFor<UserFriendList>(this, keyPaths);
+
+  @override
+  UserFriendList freeze() => RealmObjectBase.freezeObject<UserFriendList>(this);
+
+  EJsonValue toEJson() {
+    return <String, dynamic>{
+      'username': username.toEJson(),
+      'friends': friends.toEJson(),
+    };
+  }
+
+  static EJsonValue _toEJson(UserFriendList value) => value.toEJson();
+  static UserFriendList _fromEJson(EJsonValue ejson) {
+    if (ejson is! Map<String, dynamic>) return raiseInvalidEJson(ejson);
+    return switch (ejson) {
+      {'username': EJsonValue username} => UserFriendList(
+        fromEJson(username),
+        friends: fromEJson(ejson['friends']),
+      ),
+      _ => raiseInvalidEJson(ejson),
+    };
+  }
+
+  static final schema = () {
+    RealmObjectBase.registerFactory(UserFriendList._);
+    register(_toEJson, _fromEJson);
+    return const SchemaObject(
+      ObjectType.realmObject,
+      UserFriendList,
+      'UserFriendList',
+      [
+        SchemaProperty('username', RealmPropertyType.string, primaryKey: true),
+        SchemaProperty(
+          'friends',
+          RealmPropertyType.object,
+          linkTarget: 'Friend',
+          collectionType: RealmCollectionType.list,
+        ),
+      ],
+    );
+  }();
+
+  @override
+  SchemaObject get objectSchema => RealmObjectBase.getSchema(this) ?? schema;
+}
+
 class Message extends _Message with RealmEntity, RealmObjectBase, RealmObject {
   Message(
     String id,

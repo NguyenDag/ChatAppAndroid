@@ -7,7 +7,11 @@ class RealmFriendService {
 
   static void init() {
     if (true) {
-      final config = Configuration.local([Friend.schema, FileModel.schema]);
+      final config = Configuration.local([
+        Friend.schema,
+        FileModel.schema,
+        UserFriendList.schema,
+      ]);
       _realm = Realm(config);
     }
   }
@@ -17,19 +21,22 @@ class RealmFriendService {
     return _realm;
   }
 
-  static List<Friend> getAllLocalFriends() {
+  static List<Friend> getAllLocalFriends(String? username) {
     init();
-    return _realm.all<Friend>().toList();
+    final userList = _realm.find<UserFriendList>(username);
+    return userList?.friends.toList() ?? [];
   }
 
-  static void saveFriendsToLocal(List<Map<String, dynamic>> jsonList) {
+  static void saveFriendsToLocal(
+    List<Map<String, dynamic>> jsonList,
+    String? username,
+  ) {
+    if (username == null) return;
     init();
     final friends = jsonList.map((e) => friendFromJson(e)).toList();
 
     _realm.write(() {
       for (final newFriend in friends) {
-        final existingFriend = _realm.find<Friend>(newFriend.friendId);
-
         // Đảm bảo FileModel được add trước với update:true (tránh lỗi trùng key)
         for (var file in newFriend.files) {
           _realm.add(file, update: true);
@@ -37,9 +44,10 @@ class RealmFriendService {
         for (var image in newFriend.images) {
           _realm.add(image, update: true);
         }
+        final existingFriend = _realm.find<Friend>(newFriend.friendId);
 
         if (existingFriend != null) {
-          // Cập nhật thông tin từ API, giữ lại dữ liệu cục bộ
+          // Cập nhật thông tin từ API, giữ lại nickname, màu, v.v.
           existingFriend.fullName = newFriend.fullName;
           existingFriend.username = newFriend.username;
           existingFriend.isOnline = newFriend.isOnline;
@@ -53,36 +61,35 @@ class RealmFriendService {
           existingFriend.images
             ..clear()
             ..addAll(newFriend.images);
-
-          // Không đụng vào localNickname và color
         } else {
-          // Nếu là bạn mới, thêm mới vào Realm
           _realm.add(newFriend);
         }
       }
 
-      // for (var newFriend in friends) {
-      //   final oldFriend = _realm.find<Friend>(newFriend.friendId);
-      //
-      //   if (oldFriend != null) {
-      //     oldFriend.fullName = newFriend.fullName;
-      //     oldFriend.username = newFriend.username;
-      //     oldFriend.isOnline = newFriend.isOnline;
-      //     oldFriend.isSend = newFriend.isSend;
-      //     oldFriend.content = newFriend.content;
-      //     oldFriend.files.clear();
-      //     oldFriend.files.addAll(newFriend.files);
-      //     oldFriend.images.clear();
-      //     oldFriend.images.addAll(newFriend.images);
-      //   } else {
-      //     _realm.add(newFriend, update: true);
-      //   }
-      // }
+      final friendIds = friends.map((f) => f.friendId).toList();
+      final attachedFriends =
+          friendIds.map((id) => _realm.find<Friend>(id)!).toList();
+
+      var friendListOfUser = _realm.find<UserFriendList>(username);
+      if (friendListOfUser != null) {
+        friendListOfUser.friends
+          ..clear()
+          ..addAll(attachedFriends);
+      } else {
+        friendListOfUser = UserFriendList(username, friends: attachedFriends);
+        _realm.add(friendListOfUser);
+      }
     });
   }
 
-  static void clearAllLocalFriends() {
+  static void clearAllLocalFriends(String username) {
     init();
-    _realm.write(() => _realm.deleteAll<Friend>());
+    final userList = _realm.find<UserFriendList>(username);
+    if (userList != null) {
+      _realm.write(() {
+        _realm.deleteMany(userList.friends);
+        _realm.delete(userList);
+      });
+    }
   }
 }
