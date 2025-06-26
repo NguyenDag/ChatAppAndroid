@@ -77,14 +77,17 @@ class FriendService {
     }).toList();
   }
 
-  static void setChatColor(Realm realm, Friend friend, int colorValue){
-    realm.write(() {
-      friend.chatColor = colorValue;
-    });
+  static void setChatColor(Realm realm, Friend f, int colorValue){
+    final friend = realm.find<Friend>(f.friendId);
+    if (friend != null) {
+      realm.write(() {
+        friend.chatColor = colorValue;
+      });
+    }
   }
 
   static Color getChatColor(Friend friend){
-    return friend.chatColor != null ? Color(friend.chatColor!) : Colors.grey;
+    return friend.chatColor != null ? Color(friend.chatColor!) : Colors.white;
   }
 
   static void setLocalNickname(Realm realm, Friend f, String newNickname) {

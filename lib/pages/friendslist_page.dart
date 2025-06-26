@@ -32,6 +32,7 @@ class MyHome extends State<FriendsList> {
 
   void loadCurrentUser() async {
     final userInfo = await UserStorage.fetchUserInfo();
+    if (!mounted) return;
     if (userInfo != null) {
       setState(() {
         currentUser = userInfo;
@@ -42,6 +43,7 @@ class MyHome extends State<FriendsList> {
   Future<void> loadFriends() async {
     final username = await TokenService.getUsername();
     final offlineFriends = RealmFriendService.getAllLocalFriends(username);
+    if (!mounted) return;
     setState(() {
       friendsList = offlineFriends.map((f) => f.friendToJson()).toList();
       originalFriendsList = friendsList;
@@ -77,6 +79,7 @@ class MyHome extends State<FriendsList> {
   }
 
   void _onSearchChanged() {
+    if (!mounted) return;
     setState(() {
       friendsList = FriendService.filterFriends(
         originalFriendsList,
@@ -88,7 +91,7 @@ class MyHome extends State<FriendsList> {
   void _logout(BuildContext context) async {
     // Xóa thông tin người dùng đã lưu
     await TokenService.clearToken();
-
+    if (!mounted) return;
     // Chuyển hướng về trang đăng nhập
     Navigator.pushReplacement(
       context,
@@ -104,6 +107,13 @@ class MyHome extends State<FriendsList> {
     _searchController.addListener(() {
       _onSearchChanged();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchController.removeListener(_onSearchChanged);
+    super.dispose();
   }
 
   @override
@@ -258,6 +268,7 @@ class MyHome extends State<FriendsList> {
                       final isSend = f['isSend'];
                       final username = f['Username'];
                       final localNickname = f['localNickname'];
+                      final chatColor = f['chatColor'];
 
                       final Friend friend = Friend(
                         friendId,
@@ -269,6 +280,7 @@ class MyHome extends State<FriendsList> {
                         files: tempFiles,
                         images: tempImages,
                         localNickname: localNickname,
+                        chatColor: chatColor,
                       );
 
                       return FriendTile(avatarUrl: avatar, friend: friend);

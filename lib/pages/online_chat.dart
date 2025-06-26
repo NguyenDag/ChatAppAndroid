@@ -163,12 +163,22 @@ class MyWidget extends State<OnlineChat> {
     );
   }
 
+  // void _scrollToBottom() {
+  //   _scrollController.animateTo(
+  //     _scrollController.position.maxScrollExtent,
+  //     duration: Duration(milliseconds: 300),
+  //     curve: Curves.easeOut,
+  //   );
+  // }
+
   void _scrollToBottom() {
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -176,6 +186,13 @@ class MyWidget extends State<OnlineChat> {
     super.initState();
     // loadOfflineMessages();
     loadMessage();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _emojiController.dispose();
+    super.dispose();
   }
 
   @override

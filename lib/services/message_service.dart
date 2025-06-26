@@ -235,6 +235,7 @@ class MessageService {
       Colors.orange,
       Colors.teal,
       Colors.grey,
+      Colors.white,
     ];
 
     showDialog(
