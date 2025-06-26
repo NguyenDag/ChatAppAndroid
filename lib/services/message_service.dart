@@ -211,7 +211,11 @@ class MessageService {
                 onPressed: () {
                   final newName = controller_nickname.text.trim();
                   if (newName.isNotEmpty && newName != friend.fullName) {
-                    FriendService.setLocalNickname(RealmFriendService.realm, friend, newName);
+                    FriendService.setLocalNickname(
+                      RealmFriendService.realm,
+                      friend,
+                      newName,
+                    );
                     Navigator.pop(context);
                   }
                 },
@@ -219,6 +223,60 @@ class MessageService {
               ),
             ],
           ),
+    );
+  }
+
+  static void showRecolorDialog(BuildContext context, Friend friend) {
+    final List<Color> colorOptions = [
+      Colors.blue,
+      Colors.green,
+      Colors.red,
+      Colors.purple,
+      Colors.orange,
+      Colors.teal,
+      Colors.grey,
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Chọn màu đoạn chat'),
+          content: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children:
+                colorOptions.map((color) {
+                  return GestureDetector(
+                    onTap: () {
+                      // Gọi service để lưu màu mới
+                      FriendService.setChatColor(
+                        RealmFriendService.realm,
+                        friend,
+                        color.value,
+                      );
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.black12, width: 1),
+                      ),
+                    ),
+                  );
+                }).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

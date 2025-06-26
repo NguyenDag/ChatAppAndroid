@@ -25,7 +25,8 @@ class _Friend {
   late bool isOnline;
   late int isSend;
 
-  String? localNickname;
+  late String? localNickname;
+  late int? chatColor;
 }
 
 @RealmModel()
@@ -78,6 +79,7 @@ extension FriendJson on Friend {
     'isOnline': isOnline,
     'isSend': isSend,
     'localNickname': localNickname,
+    'chatColor': chatColor,
   };
 }
 
@@ -104,6 +106,7 @@ Friend friendFromJson(Map<String, dynamic> json) {
     files: tempFiles,
     images: tempImages,
     localNickname:  json['localNickname'] as String?,
+    chatColor: json['chatColor'] as int?,
   );
 }
 

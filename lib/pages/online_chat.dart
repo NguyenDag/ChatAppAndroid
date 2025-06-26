@@ -257,7 +257,7 @@ class MyWidget extends State<OnlineChat> {
               if (value == 'nickname') {
                 MessageService.showRenameDialog(context, widget.friend);
               } else if (value == 'color') {
-                // _showColorPicker(context, widget.friend);
+                MessageService.showRecolorDialog(context, widget.friend);
               }
             },
             itemBuilder:
@@ -274,8 +274,11 @@ class MyWidget extends State<OnlineChat> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(),
+      body: Container(
+        decoration: BoxDecoration(
+          color: FriendService.getChatColor(widget.friend),
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Column(
           children: [
             Expanded(

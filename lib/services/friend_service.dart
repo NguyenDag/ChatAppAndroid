@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:ui' show Color;
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:myapp/constants/api_constants.dart';
 import 'package:myapp/services/token_service.dart';
@@ -73,6 +75,16 @@ class FriendService {
       final name = friend['FullName']?.toLowerCase() ?? '';
       return name.contains(query.toLowerCase());
     }).toList();
+  }
+
+  static void setChatColor(Realm realm, Friend friend, int colorValue){
+    realm.write(() {
+      friend.chatColor = colorValue;
+    });
+  }
+
+  static Color getChatColor(Friend friend){
+    return friend.chatColor != null ? Color(friend.chatColor!) : Colors.grey;
   }
 
   static void setLocalNickname(Realm realm, Friend f, String newNickname) {

@@ -93,6 +93,7 @@ class Friend extends _Friend with RealmEntity, RealmObjectBase, RealmObject {
     Iterable<FileModel> files = const [],
     Iterable<FileModel> images = const [],
     String? localNickname,
+    int? chatColor,
   }) {
     RealmObjectBase.set(this, 'friendId', friendId);
     RealmObjectBase.set(this, 'fullName', fullName);
@@ -111,6 +112,7 @@ class Friend extends _Friend with RealmEntity, RealmObjectBase, RealmObject {
     RealmObjectBase.set(this, 'isOnline', isOnline);
     RealmObjectBase.set(this, 'isSend', isSend);
     RealmObjectBase.set(this, 'localNickname', localNickname);
+    RealmObjectBase.set(this, 'chatColor', chatColor);
   }
 
   Friend._();
@@ -171,6 +173,11 @@ class Friend extends _Friend with RealmEntity, RealmObjectBase, RealmObject {
       RealmObjectBase.set(this, 'localNickname', value);
 
   @override
+  int? get chatColor => RealmObjectBase.get<int>(this, 'chatColor') as int?;
+  @override
+  set chatColor(int? value) => RealmObjectBase.set(this, 'chatColor', value);
+
+  @override
   Stream<RealmObjectChanges<Friend>> get changes =>
       RealmObjectBase.getChanges<Friend>(this);
 
@@ -192,6 +199,7 @@ class Friend extends _Friend with RealmEntity, RealmObjectBase, RealmObject {
       'isOnline': isOnline.toEJson(),
       'isSend': isSend.toEJson(),
       'localNickname': localNickname.toEJson(),
+      'chatColor': chatColor.toEJson(),
     };
   }
 
@@ -216,6 +224,7 @@ class Friend extends _Friend with RealmEntity, RealmObjectBase, RealmObject {
           files: fromEJson(ejson['files']),
           images: fromEJson(ejson['images']),
           localNickname: fromEJson(ejson['localNickname']),
+          chatColor: fromEJson(ejson['chatColor']),
         ),
       _ => raiseInvalidEJson(ejson),
     };
@@ -244,6 +253,7 @@ class Friend extends _Friend with RealmEntity, RealmObjectBase, RealmObject {
       SchemaProperty('isOnline', RealmPropertyType.bool),
       SchemaProperty('isSend', RealmPropertyType.int),
       SchemaProperty('localNickname', RealmPropertyType.string, optional: true),
+      SchemaProperty('chatColor', RealmPropertyType.int, optional: true),
     ]);
   }();
 
